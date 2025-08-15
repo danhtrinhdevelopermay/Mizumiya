@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Heart, MessageCircle, Share, BookmarkPlus, Music, MoreHorizontal, Play, Pause, RefreshCw } from 'lucide-react';
+import { Heart, MessageCircle, Share, BookmarkPlus, Music, MoreHorizontal, Play, Pause, RefreshCw, Search, X } from 'lucide-react';
 import Layout from '@/components/layout/layout';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -42,15 +43,17 @@ export default function ReelsPage() {
   const [reels, setReels] = useState<Reel[]>([]);
   const [isPlaying, setIsPlaying] = useState(true);
   const [searchQuery, setSearchQuery] = useState('viral');
+  const [searchInput, setSearchInput] = useState('viral');
+  const [showSearch, setShowSearch] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({});
   const { toast } = useToast();
 
-  // Fetch TikTok videos
+  // Fetch TikTok videos using search
   const { data: tiktokData, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/tiktok/trending', searchQuery],
+    queryKey: ['/api/tiktok/search', searchQuery],
     queryFn: async () => {
-      const response = await fetch('/api/tiktok/trending?limit=15', {
+      const response = await fetch(`/api/tiktok/search?q=${encodeURIComponent(searchQuery)}&limit=15&type=keyword`, {
         credentials: 'include'
       });
       if (!response.ok) {
@@ -85,9 +88,31 @@ export default function ReelsPage() {
     refetch();
     toast({
       title: "Đang tải video mới",
-      description: "Đang lấy video TikTok mới nhất...",
+      description: `Đang tìm kiếm video về "${searchQuery}"...`,
     });
   };
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      setSearchQuery(query.trim());
+      setSearchInput(query.trim());
+      toast({
+        title: "Đang tìm kiếm",
+        description: `Đang tìm video TikTok về "${query.trim()}"...`,
+      });
+    }
+  };
+
+  const handleQuickSearch = (term: string) => {
+    setSearchInput(term);
+    handleSearch(term);
+    setShowSearch(false);
+  };
+
+  const quickSearchTerms = [
+    'funny', 'dance', 'food', 'travel', 'music',
+    'pets', 'comedy', 'art', 'fitness', 'beauty'
+  ];
 
   const toggleLike = (reelId: string) => {
     setReels(prevReels =>
@@ -192,7 +217,83 @@ export default function ReelsPage() {
 
   return (
     <Layout>
-      <div className="h-screen overflow-hidden bg-black">
+      <div className="h-screen overflow-hidden bg-black relative">
+        {/* Search Overlay */}
+        {showSearch && (
+          <div className="absolute inset-0 bg-black/90 z-50 flex flex-col">
+            <div className="p-4">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    type="text"
+                    placeholder="Tìm kiếm video TikTok..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSearch(searchInput);
+                        setShowSearch(false);
+                      }
+                    }}
+                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-pink-500"
+                    autoFocus
+                  />
+                </div>
+                <Button
+                  onClick={() => setShowSearch(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/10"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              {/* Quick Search Terms */}
+              <div className="mb-4">
+                <p className="text-white/70 text-sm mb-2">Tìm kiếm phổ biến:</p>
+                <div className="flex flex-wrap gap-2">
+                  {quickSearchTerms.map((term) => (
+                    <Button
+                      key={term}
+                      onClick={() => handleQuickSearch(term)}
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
+                    >
+                      #{term}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <Button
+                onClick={() => {
+                  handleSearch(searchInput);
+                  setShowSearch(false);
+                }}
+                className="w-full bg-pink-600 hover:bg-pink-700 text-white"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Tìm kiếm
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {/* Search Button */}
+        <div className="absolute top-4 left-4 z-40">
+          <Button
+            onClick={() => setShowSearch(true)}
+            size="sm"
+            className="bg-black/50 hover:bg-black/70 text-white border-0 h-10 px-3"
+          >
+            <Search className="w-4 h-4 mr-2" />
+            "{searchQuery}"
+          </Button>
+        </div>
+        
         <div
           ref={containerRef}
           className="h-full overflow-y-auto snap-y snap-mandatory"
@@ -397,9 +498,9 @@ export default function ReelsPage() {
                 </div>
               </div>
 
-              {/* TikTok Data Source Label */}
-              <div className="absolute top-4 left-4 text-white text-xs bg-black/30 px-2 py-1 rounded-full">
-                📱 TikTok Live
+              {/* Video Source Info */}
+              <div className="absolute top-16 left-4 text-white text-xs bg-black/30 px-2 py-1 rounded-full">
+                📱 Tìm kiếm: {searchQuery}
               </div>
             </div>
           ))}
