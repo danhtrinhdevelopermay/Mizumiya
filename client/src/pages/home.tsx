@@ -4,7 +4,6 @@ import RightSidebar from "@/components/layout/right-sidebar";
 import Stories from "@/components/feed/stories";
 import CreatePost from "@/components/feed/create-post";
 import NewsFeed from "@/components/feed/news-feed";
-import MobileNav from "@/components/ui/mobile-nav";
 import { useScreenSize } from "@/hooks/useScreenSize";
 
 export default function Home() {
@@ -50,10 +49,7 @@ export default function Home() {
         </div>
       </div>
       
-      {/* Mobile Navigation - only show on mobile */}
-      <div className={isMobile ? "block" : "hidden"}>
-        <MobileNav />
-      </div>
+
     </div>
   );
 }

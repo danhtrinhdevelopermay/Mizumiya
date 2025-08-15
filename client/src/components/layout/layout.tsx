@@ -3,6 +3,7 @@ import Header from "./header";
 import LeftSidebar from "./left-sidebar";
 import RightSidebar from "./right-sidebar";
 import NotificationManager from "../notifications/notification-manager";
+import MobileNav from "../ui/mobile-nav";
 
 interface LayoutProps {
   children: ReactNode;
@@ -28,6 +29,7 @@ export default function Layout({ children }: LayoutProps) {
           <RightSidebar />
         </aside>
       </div>
+      <MobileNav />
       <NotificationManager />
     </div>
   );
