@@ -30,6 +30,7 @@ import BeautyContest from "@/pages/beauty-contest";
 import AdminBeautyContest from "@/pages/admin-beauty-contest";
 import StorageManagement from "@/pages/storage-management";
 import VideosPage from "@/pages/videos";
+import ReelsPage from "@/pages/reels";
 import TestLogin from "@/pages/test-login";
 import DebugSession from "@/pages/debug-session";
 
@@ -93,6 +94,7 @@ function AuthenticatedRoutes() {
       <Route path="/admin/beauty-contest" component={AdminBeautyContest} />
       <Route path="/admin/storage" component={StorageManagement} />
       <Route path="/videos" component={VideosPage} />
+      <Route path="/reels" component={ReelsPage} />
       <Route path="/test-login" component={TestLogin} />
       <Route path="/debug-session" component={DebugSession} />
       <Route>{() => {

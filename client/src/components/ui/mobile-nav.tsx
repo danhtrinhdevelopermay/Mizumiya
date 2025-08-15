@@ -45,18 +45,18 @@ export default function MobileNav() {
           </div>
         </Link>
 
-        {/* Videos/Watch */}
-        <Link href="/videos">
-          <div className="flex flex-col items-center justify-center px-3 py-1 relative" data-testid="mobile-link-videos">
+        {/* Reels/Videos */}
+        <Link href="/reels">
+          <div className="flex flex-col items-center justify-center px-3 py-1 relative" data-testid="mobile-link-reels">
             <div className="relative">
               <Play className={`h-7 w-7 ${
-                location === "/videos" ? "text-blue-600" : "text-gray-600"
+                location === "/reels" ? "text-blue-600" : "text-gray-600"
               }`} />
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-xs font-bold">1</span>
               </div>
             </div>
-            {location === "/videos" && (
+            {location === "/reels" && (
               <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-blue-600 rounded-full"></div>
             )}
           </div>

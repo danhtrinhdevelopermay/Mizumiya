@@ -1,0 +1,49 @@
+You are a professional Node.js developer.  
+Your task is to build a TikTok scraper in JavaScript using Puppeteer with the following requirements:
+
+1. **Input Parameters**:
+   - Variable `searchType` (values: "keyword" or "hashtag").
+   - Variable `query` (string: the keyword or hashtag to search for).
+   - Variable `proxy` (string: proxy in format `http://user:pass@ip:port`, optional).
+
+2. **Generate TikTok URL**:
+   - If `searchType` = "keyword": https://www.tiktok.com/search?q={query}
+   - If `searchType` = "hashtag": https://www.tiktok.com/tag/{query}
+
+3. **Puppeteer Configuration**:
+   - Run with `headless: false` for debugging.
+   - Set a realistic User-Agent (latest Chrome version).
+   - Use stealth mode to avoid bot detection (`puppeteer-extra-plugin-stealth`).
+   - If `proxy` is provided, configure Puppeteer to use it.
+
+4. **Data Collection**:
+   - Scroll down the page at least 5 times, waiting 2 seconds after each scroll to load more videos.
+   - For each video, extract:
+     - Full video link
+     - Caption (description)
+     - Thumbnail (preview image)
+     - Views count
+     - Likes count
+     - Comments count
+   - Skip duplicate videos.
+
+5. **Output**:
+   - Save results to `videos.json`.
+   - Create an `index.html` file to display the collected videos in a clean, user-friendly grid layout.
+   - Each video in the HTML should show:
+     - Embedded playable TikTok video (use iframe embed format)
+     - Caption text
+     - Thumbnail preview (if applicable)
+     - Views, Likes, and Comments count
+   - Add basic CSS styling for better readability (grid layout, card design).
+
+6. **Additional Requirements**:
+   - Must run directly with `node index.js` without modifications.
+   - Use try/catch to prevent crashes when encountering errors.
+   - Log progress in the console (e.g., "Scrolling...", "Collected X videos so far...").
+   - After scraping, automatically open the generated `index.html` file in the default browser so the user can see the results immediately.
+
+Final Deliverables:
+- `index.js` file containing the complete working code.
+- `videos.json` file containing the scraped data.
+- `index.html` file that displays the results.
