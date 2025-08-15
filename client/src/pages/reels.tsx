@@ -251,9 +251,30 @@ export default function ReelsPage() {
                 </Button>
               )}
             </div>
-            <div className="mt-6 text-xs text-gray-400 border-t border-gray-700 pt-4">
-              <p className="mb-1">⚠️ Lưu ý: Chúng tôi chỉ hiển thị video TikTok thực</p>
-              <p>Không có video giả hoặc video thử nghiệm nào được hiển thị</p>
+            <div className="mt-6 text-xs text-gray-400 border-t border-gray-700 pt-4 space-y-2">
+              <div>
+                <p className="mb-1 text-yellow-400">🚨 Vấn đề kỹ thuật:</p>
+                <p className="mb-2">Việc scraping video TikTok trực tiếp gặp khó khăn do:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>TikTok có hệ thống chống bot mạnh</li>
+                  <li>Cần nhiều thư viện hệ thống</li>
+                  <li>Có thể vi phạm điều khoản dịch vụ</li>
+                  <li>Môi trường hiện tại không hỗ trợ Chrome</li>
+                </ul>
+              </div>
+              <div>
+                <p className="mb-1 text-green-400">💡 Giải pháp thực tế:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>Sử dụng TikTok API chính thức</li>
+                  <li>Tích hợp third-party APIs (TikAPI, RapidAPI)</li>
+                  <li>Chia sẻ link TikTok trực tiếp</li>
+                  <li>Sử dụng iframe embed cho video cụ thể</li>
+                </ul>
+              </div>
+              <div className="bg-gray-800/50 p-3 rounded mt-3">
+                <p className="text-white text-xs mb-1">ℹ️ Hệ thống đã loại bỏ hoàn toàn video giả</p>
+                <p className="text-xs">Chỉ hiển thị video thực hoặc thông báo lỗi rõ ràng</p>
+              </div>
             </div>
           </div>
         </div>

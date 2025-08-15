@@ -48,6 +48,9 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Mount TikTok routes FIRST to avoid Vite middleware override
+  app.use('/api/tiktok', tiktokRoutes);
+  
   // Session configuration
   const PgStore = connectPgSimple(session);
   const sessionStore = new PgStore({
@@ -1645,9 +1648,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       alt: `Placeholder ${size}x${size}` 
     });
   });
-
-  // TikTok API routes
-  app.use('/api/tiktok', tiktokRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -45,18 +45,38 @@ export class TikTokScraper {
 
   private async initBrowser() {
     if (!this.browser) {
-      this.browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-web-security',
-          '--disable-extensions',
-          '--no-first-run',
-          '--disable-default-apps',
-        ],
-      });
+      try {
+        this.browser = await puppeteer.launch({
+          headless: true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-web-security',
+            '--disable-extensions',
+            '--no-first-run',
+            '--disable-default-apps',
+            '--disable-gpu',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--disable-background-networking',
+            '--disable-features=TranslateUI',
+            '--disable-ipc-flooding-protection',
+          ],
+        });
+      } catch (error) {
+        console.error('❌ Failed to launch Chrome browser:', error);
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        
+        if (errorMsg.includes('libglib') || errorMsg.includes('shared libraries')) {
+          throw new Error('Chrome browser dependencies are missing. This environment doesn\'t support running Chrome.');
+        } else if (errorMsg.includes('Chrome')) {
+          throw new Error('Chrome browser is not available or properly installed.');
+        }
+        
+        throw error;
+      }
     }
     return this.browser;
   }
@@ -298,8 +318,26 @@ export class TikTokScraper {
         await page.close();
       }
       
-      // NO MORE FAKE FALLBACK - throw error instead
-      throw new Error(`Failed to scrape real TikTok videos for "${query}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Provide helpful error message for common issues
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      
+      let helpfulMessage = `Unable to scrape TikTok videos for "${query}".`;
+      
+      if (errorMsg.includes('Could not find Chrome')) {
+        helpfulMessage += ' Chrome browser is not installed.';
+      } else if (errorMsg.includes('libglib') || errorMsg.includes('shared libraries')) {
+        helpfulMessage += ' Required system libraries are missing in this environment.';
+      } else if (errorMsg.includes('timeout') || errorMsg.includes('navigation')) {
+        helpfulMessage += ' TikTok is blocking automated access or the connection timed out.';
+      } else if (errorMsg.includes('selector')) {
+        helpfulMessage += ' TikTok has changed their website structure.';
+      } else {
+        helpfulMessage += ' TikTok scraping failed.';
+      }
+      
+      helpfulMessage += ' Real-time TikTok scraping requires complex setup and may violate TikTok\'s terms of service.';
+      
+      throw new Error(helpfulMessage);
     }
   }
 
