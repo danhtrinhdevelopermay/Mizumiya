@@ -74,10 +74,20 @@ export class TikTokScraper {
       const browser = await this.initBrowser();
       page = await browser.newPage();
 
-      // Set user agent to avoid detection
+      // Enhanced user agent and headers to avoid detection
       await page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
       );
+
+      // Set additional headers
+      await page.setExtraHTTPHeaders({
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9,vi;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+      });
 
       // Set viewport
       await page.setViewport({ width: 1920, height: 1080 });
@@ -89,66 +99,151 @@ export class TikTokScraper {
 
       console.log(`🔗 Navigating to: ${url}`);
       
-      // Navigate to TikTok
+      // Navigate to TikTok with longer timeout
       await page.goto(url, { 
-        waitUntil: 'networkidle2',
-        timeout: 30000 
+        waitUntil: 'domcontentloaded',
+        timeout: 60000 
       });
 
-      // Wait for videos to load
-      await page.waitForSelector('[data-e2e="search-card-video"]', { timeout: 15000 });
+      // Wait a bit for dynamic content
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Try multiple selectors for videos
+      const selectors = [
+        '[data-e2e="search-card-video"]',
+        '[data-testid="video-card"]',
+        'div[data-e2e="search-card"]',
+        'div[class*="DivItemContainer"]',
+        'div[class*="video-card"]',
+        'a[href*="/video/"]'
+      ];
+
+      let foundVideos = false;
+      let selectedSelector = '';
+      
+      for (const selector of selectors) {
+        try {
+          await page.waitForSelector(selector, { timeout: 5000 });
+          const count = await page.$$eval(selector, (els: Element[]) => els.length);
+          if (count > 0) {
+            console.log(`✅ Found ${count} videos with selector: ${selector}`);
+            selectedSelector = selector;
+            foundVideos = true;
+            break;
+          }
+        } catch (e) {
+          console.log(`❌ Selector ${selector} not found`);
+        }
+      }
+
+      if (!foundVideos) {
+        throw new Error('No video elements found with any selector');
+      }
 
       // Scroll to load more videos
       console.log('📜 Scrolling to load more videos...');
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 3; i++) {
         await page.evaluate(() => {
           window.scrollTo(0, document.body.scrollHeight);
         });
         await new Promise(resolve => setTimeout(resolve, 2000));
-        console.log(`   Scroll ${i + 1}/5 completed`);
+        console.log(`   Scroll ${i + 1}/3 completed`);
       }
 
-      // Extract video data
+      // Extract video data with improved selectors
       console.log('🎯 Extracting video data...');
-      const videos = await page.evaluate((maxVideos: number) => {
-        const videoElements = document.querySelectorAll('[data-e2e="search-card-video"]');
+      const videos = await page.evaluate((maxVideos: number, selector: string) => {
+        const videoElements = document.querySelectorAll(selector);
         const videos: any[] = [];
         
         for (let i = 0; i < Math.min(videoElements.length, maxVideos); i++) {
           const element = videoElements[i];
           
           try {
-            // Get video link
-            const linkElement = element.querySelector('a');
-            const videoLink = linkElement?.href || '';
+            // Try multiple ways to get video link
+            let videoLink = '';
+            let linkElement = element.querySelector('a');
+            if (!linkElement) {
+              linkElement = element.closest('a') || (element.parentElement ? element.parentElement.querySelector('a') : null);
+            }
+            videoLink = linkElement?.href || '';
+            
+            if (!videoLink || !videoLink.includes('/video/')) {
+              continue; // Skip if no valid video link
+            }
             
             // Extract video ID from URL
-            const videoId = videoLink.split('/').pop() || `video_${Date.now()}_${i}`;
+            const videoId = videoLink.split('/video/')[1]?.split('?')[0] || `video_${Date.now()}_${i}`;
             
-            // Get thumbnail
-            const imgElement = element.querySelector('img');
-            const thumbnail = imgElement?.src || '';
+            // Try multiple ways to get thumbnail
+            let thumbnail = '';
+            const imgElements = element.querySelectorAll('img');
+            for (const img of imgElements) {
+              if (img.src && (img.src.includes('tiktok') || img.src.includes('p16-sign'))) {
+                thumbnail = img.src;
+                break;
+              }
+            }
             
-            // Get user info
-            const userElement = element.querySelector('[data-e2e="search-card-user-unique-id"]');
-            const username = userElement?.textContent?.replace('@', '') || 'unknown';
+            // Try multiple ways to get username
+            let username = 'unknown';
+            const userSelectors = [
+              '[data-e2e="search-card-user-unique-id"]',
+              '[data-testid="user-unique-id"]',
+              'p[data-e2e="search-card-user-unique-id"]',
+              'a[href*="/@"]',
+              'span[class*="username"]'
+            ];
             
-            // Get caption/description  
-            const captionElement = element.querySelector('[data-e2e="search-card-desc"]');
-            const caption = captionElement?.textContent || 'No caption';
+            for (const userSelector of userSelectors) {
+              const userElement = element.querySelector(userSelector);
+              if (userElement?.textContent) {
+                username = userElement.textContent.replace('@', '').trim();
+                break;
+              }
+            }
             
-            // Get stats (try to find view count, likes, etc.)
-            const statsElement = element.querySelector('[data-e2e="video-views"]');
-            const viewText = statsElement?.textContent || '0';
+            // Try multiple ways to get caption
+            let caption = 'No caption';
+            const captionSelectors = [
+              '[data-e2e="search-card-desc"]',
+              '[data-testid="video-desc"]',
+              'div[class*="caption"]',
+              'div[class*="description"]'
+            ];
             
-            // Parse view count
+            for (const captionSelector of captionSelectors) {
+              const captionElement = element.querySelector(captionSelector);
+              if (captionElement?.textContent) {
+                caption = captionElement.textContent.trim();
+                break;
+              }
+            }
+            
+            // Try to get view count
             let views = 0;
-            if (viewText.includes('K')) {
-              views = parseFloat(viewText.replace('K', '')) * 1000;
-            } else if (viewText.includes('M')) {
-              views = parseFloat(viewText.replace('M', '')) * 1000000;
-            } else {
-              views = parseInt(viewText.replace(/\D/g, '')) || Math.floor(Math.random() * 10000);
+            const statsSelectors = [
+              '[data-e2e="video-views"]',
+              '[data-testid="video-views"]',
+              'strong[data-e2e="video-views"]',
+              'div[class*="views"]'
+            ];
+            
+            for (const statsSelector of statsSelectors) {
+              const statsElement = element.querySelector(statsSelector);
+              if (statsElement?.textContent) {
+                const viewText = statsElement.textContent;
+                if (viewText.includes('K')) {
+                  views = parseFloat(viewText.replace('K', '')) * 1000;
+                } else if (viewText.includes('M')) {
+                  views = parseFloat(viewText.replace('M', '')) * 1000000;
+                } else if (viewText.includes('B')) {
+                  views = parseFloat(viewText.replace('B', '')) * 1000000000;
+                } else {
+                  views = parseInt(viewText.replace(/\D/g, '')) || 0;
+                }
+                break;
+              }
             }
             
             const video = {
@@ -160,20 +255,20 @@ export class TikTokScraper {
                 id: username,
                 username: username,
                 displayName: username,
-                avatar: `https://p16-sign-sg.tiktokcdn.com/aweme/100x100/${username}.jpeg`,
-                isVerified: Math.random() > 0.7
+                avatar: thumbnail ? `https://p16-sign-sg.tiktokcdn.com/aweme/100x100/${username}.jpeg` : '',
+                isVerified: false // We can't reliably detect this from scraping
               },
               music: {
                 title: 'Original Sound',
                 artist: username
               },
               stats: {
-                likes: Math.floor(Math.random() * 50000) + 1000,
-                comments: Math.floor(Math.random() * 1000) + 10,
-                shares: Math.floor(Math.random() * 500) + 5,
+                likes: 0, // We can't reliably get these from search results
+                comments: 0,
+                shares: 0,
                 views: views
               },
-              createdTime: Date.now() - Math.floor(Math.random() * 86400000 * 7) // Random time within last week
+              createdTime: Date.now()
             };
             
             videos.push(video);
@@ -183,11 +278,17 @@ export class TikTokScraper {
         }
         
         return videos;
-      }, maxVideos);
+      }, maxVideos, selectedSelector);
 
-      console.log(`✅ Successfully scraped ${videos.length} videos`);
+      console.log(`✅ Successfully scraped ${videos.length} real TikTok videos`);
       
       await page.close();
+      
+      // Only return videos if we have real data
+      if (videos.length === 0) {
+        throw new Error('No real TikTok videos found');
+      }
+      
       return videos;
 
     } catch (error) {
@@ -197,88 +298,11 @@ export class TikTokScraper {
         await page.close();
       }
       
-      // Return fallback data if scraping fails
-      return this.getFallbackVideos(query, maxVideos);
+      // NO MORE FAKE FALLBACK - throw error instead
+      throw new Error(`Failed to scrape real TikTok videos for "${query}": ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  private getFallbackVideos(query: string, maxVideos: number): TikTokVideo[] {
-    console.log('📦 Using fallback video data...');
-    
-    // Working sample video URLs
-    const sampleVideos = [
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4'
-    ];
-
-    const captions = [
-      `🔥 ${query} content that'll blow your mind! #${query} #viral #fyp #amazing`,
-      `Just discovered this ${query} trend! 😱 Who else is obsessed? #${query} #trending`,
-      `POV: You found the perfect ${query} video 💫 #${query} #viral #satisfying`,
-      `This ${query} hack changed my life! 🤯 Save this for later #${query} #lifehack`,
-      `Can't stop watching this ${query} content! 🔄 #${query} #addictive #viral`,
-      `${query} vibes only ✨ Drop a 🔥 if you agree #${query} #mood #aesthetic`,
-      `Everyone needs to see this ${query}! 📸 Tag your friends #${query} #viral`,
-      `${query} energy is unmatched 💯 #${query} #positive #inspiring`,
-      `Wait for the ${query} part... 😮 #${query} #surprising #satisfying`,
-      `New ${query} just dropped! 🚀 What do you think? #${query} #fresh #trending`
-    ];
-
-    const usernames = [
-      'viralking', 'trendqueen', 'contenthero', 'videolover', 'socialmedia_star',
-      'creative_soul', 'funnyvideos', 'lifestyle_guru', 'music_addict', 'dance_fever',
-      'comedy_central', 'art_creator', 'food_lover', 'travel_bug', 'fitness_freak'
-    ];
-
-    const musicTitles = [
-      'Viral Sound', 'Trending Beat', 'Hot Track', 'Popular Song', 'Dance Hit',
-      'Chill Vibes', 'Upbeat Mix', 'Catchy Tune', 'Fire Beat', 'Smooth Flow'
-    ];
-    
-    const fallbackVideos: TikTokVideo[] = [];
-    
-    for (let i = 0; i < maxVideos; i++) {
-      const username = usernames[i % usernames.length];
-      const videoUrl = sampleVideos[i % sampleVideos.length];
-      const caption = captions[i % captions.length];
-      const musicTitle = musicTitles[i % musicTitles.length];
-
-      fallbackVideos.push({
-        id: `video_${Date.now()}_${i}`,
-        videoUrl: videoUrl,
-        thumbnail: `https://picsum.photos/400/600?random=${i + Date.now()}`,
-        caption: caption,
-        user: {
-          id: `user_${i}`,
-          username: username,
-          displayName: username.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-          avatar: `https://picsum.photos/100/100?random=${i + 100}`,
-          isVerified: i % 3 === 0
-        },
-        music: {
-          title: musicTitle,
-          artist: username
-        },
-        stats: {
-          likes: Math.floor(Math.random() * 500000) + 10000,
-          comments: Math.floor(Math.random() * 5000) + 100,
-          shares: Math.floor(Math.random() * 2000) + 50,
-          views: Math.floor(Math.random() * 2000000) + 50000
-        },
-        createdTime: Date.now() - Math.floor(Math.random() * 86400000 * 7) // Within last week
-      });
-    }
-    
-    return fallbackVideos;
-  }
 
   public async close() {
     if (this.browser) {

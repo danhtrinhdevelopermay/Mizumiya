@@ -56,12 +56,25 @@ export default function ReelsPage() {
       const response = await fetch(`/api/tiktok/search?q=${encodeURIComponent(searchQuery)}&limit=15&type=keyword`, {
         credentials: 'include'
       });
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch TikTok videos');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const error = new Error(errorData.message || 'Failed to fetch TikTok videos');
+        (error as any).status = response.status;
+        (error as any).errorData = errorData;
+        throw error;
       }
+      
       return response.json();
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: (failureCount, error) => {
+      // Don't retry for service unavailable errors
+      if ((error as any)?.status === 503) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 
   // Convert TikTok videos to reels format and add isLiked property
@@ -193,22 +206,55 @@ export default function ReelsPage() {
   }
 
   if (error || reels.length === 0) {
+    const errorData = (error as any)?.errorData;
+    const isServiceUnavailable = (error as any)?.status === 503;
+    
     return (
       <Layout>
         <div className="h-screen flex items-center justify-center bg-black">
-          <div className="text-center text-white max-w-md px-4">
-            <div className="text-6xl mb-4">😔</div>
-            <h2 className="text-2xl font-bold mb-2">Không thể tải video</h2>
-            <p className="text-gray-300 mb-6">
-              {error ? 'Có lỗi xảy ra khi tải video TikTok' : 'Không tìm thấy video nào'}
+          <div className="text-center text-white max-w-lg px-4">
+            <div className="text-6xl mb-4">{isServiceUnavailable ? '🚫' : '😔'}</div>
+            <h2 className="text-2xl font-bold mb-2">
+              {isServiceUnavailable ? 'Dịch vụ TikTok tạm thời không khả dụng' : 'Không thể tải video'}
+            </h2>
+            <p className="text-gray-300 mb-4">
+              {isServiceUnavailable 
+                ? (errorData?.message || 'Hệ thống không thể kết nối đến TikTok để lấy video thực. Điều này có thể do TikTok đã chặn truy cập hoặc hệ thống đang gặp sự cố.')
+                : (error ? 'Có lỗi xảy ra khi tải video TikTok' : 'Không tìm thấy video nào')
+              }
             </p>
-            <Button 
-              onClick={refreshVideos}
-              className="bg-pink-600 hover:bg-pink-700 text-white"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Thử lại
-            </Button>
+            {errorData?.suggestion && (
+              <p className="text-yellow-400 text-sm mb-6">
+                💡 {errorData.suggestion}
+              </p>
+            )}
+            <div className="space-y-3">
+              <Button 
+                onClick={refreshVideos}
+                className="bg-pink-600 hover:bg-pink-700 text-white w-full"
+                disabled={isLoading}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                {isLoading ? 'Đang tải...' : 'Thử lại'}
+              </Button>
+              {isServiceUnavailable && (
+                <Button
+                  onClick={() => {
+                    const newSearchTerms = ['trending', 'viral', 'funny', 'dance', 'music'];
+                    const randomTerm = newSearchTerms[Math.floor(Math.random() * newSearchTerms.length)];
+                    handleSearch(randomTerm);
+                  }}
+                  variant="outline"
+                  className="border-white/30 text-white hover:bg-white/10 w-full"
+                >
+                  Thử từ khóa khác
+                </Button>
+              )}
+            </div>
+            <div className="mt-6 text-xs text-gray-400 border-t border-gray-700 pt-4">
+              <p className="mb-1">⚠️ Lưu ý: Chúng tôi chỉ hiển thị video TikTok thực</p>
+              <p>Không có video giả hoặc video thử nghiệm nào được hiển thị</p>
+            </div>
           </div>
         </div>
       </Layout>

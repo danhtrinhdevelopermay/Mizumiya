@@ -6,13 +6,13 @@ const router = Router();
 
 // Get TikTok videos by search
 router.get('/search', requireAuth, async (req, res) => {
-  try {
-    const { 
-      q: query = 'viral', 
-      type: searchType = 'keyword',
-      limit = '10' 
-    } = req.query;
+  const { 
+    q: query = 'viral', 
+    type: searchType = 'keyword',
+    limit = '10' 
+  } = req.query;
 
+  try {
     console.log(`🎬 TikTok API: Fetching videos for "${query}" (${searchType})`);
 
     if (!query || typeof query !== 'string') {
@@ -49,9 +49,18 @@ router.get('/search', requireAuth, async (req, res) => {
 
   } catch (error) {
     console.error('❌ TikTok API error:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch TikTok videos',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isScrapingError = errorMessage.includes('Failed to scrape real TikTok videos');
+    
+    res.status(503).json({ 
+      error: 'TikTok scraping service temporarily unavailable',
+      message: isScrapingError ? 
+        `Unable to fetch real TikTok videos for "${query}". The scraping service is having issues connecting to TikTok.` :
+        'TikTok service is temporarily unavailable. Please try again later.',
+      query,
+      searchType,
+      suggestion: 'Please try again with a different search term or try again later.'
     });
   }
 });
@@ -81,19 +90,26 @@ router.get('/trending', requireAuth, async (req, res) => {
 
   } catch (error) {
     console.error('❌ TikTok trending API error:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch trending TikTok videos',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isScrapingError = errorMessage.includes('Failed to scrape real TikTok videos');
+    
+    res.status(503).json({ 
+      error: 'TikTok scraping service temporarily unavailable',
+      message: isScrapingError ? 
+        'Unable to fetch real trending TikTok videos. The scraping service is having issues connecting to TikTok.' :
+        'TikTok trending service is temporarily unavailable. Please try again later.',
+      suggestion: 'Please try again later or check your internet connection.'
     });
   }
 });
 
 // Get videos by hashtag
 router.get('/hashtag/:tag', requireAuth, async (req, res) => {
+  const { tag } = req.params;
+  const { limit = '10' } = req.query;
+  
   try {
-    const { tag } = req.params;
-    const { limit = '10' } = req.query;
-    
     if (!tag) {
       return res.status(400).json({ error: 'Hashtag parameter is required' });
     }
@@ -114,9 +130,17 @@ router.get('/hashtag/:tag', requireAuth, async (req, res) => {
 
   } catch (error) {
     console.error('❌ TikTok hashtag API error:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch TikTok hashtag videos',
-      message: error instanceof Error ? error.message : 'Unknown error'
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isScrapingError = errorMessage.includes('Failed to scrape real TikTok videos');
+    
+    res.status(503).json({ 
+      error: 'TikTok scraping service temporarily unavailable',
+      message: isScrapingError ? 
+        `Unable to fetch real TikTok videos for hashtag "#${tag}". The scraping service is having issues connecting to TikTok.` :
+        'TikTok hashtag service is temporarily unavailable. Please try again later.',
+      hashtag: tag,
+      suggestion: 'Please try again with a different hashtag or try again later.'
     });
   }
 });
