@@ -12,7 +12,7 @@ import {
   Clock,
   MessageCircle,
   LogOut,
-  Tv
+  Play
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,111 +29,106 @@ export default function MobileNav() {
   });
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50" data-testid="mobile-nav">
-      {/* Facebook-style Navigation */}
-      <div className="bg-white border-t border-gray-200 shadow-lg">
-        <div className="flex items-center justify-around py-2">
-          {/* Home */}
-          <Link href="/">
-            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-home">
-              <div className="relative">
-                <Home className={`h-7 w-7 ${
-                  location === "/" || location === "/home" ? "text-blue-600" : "text-gray-600"
-                }`} />
-                {(location === "/" || location === "/home") && (
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-                )}
-              </div>
+    <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-white shadow-lg border-t border-gray-200 md:hidden">
+      {/* Main Navigation Bar */}
+      <div className="flex items-center justify-around py-2">
+        {/* Home */}
+        <Link href="/">
+          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-home">
+            <div className="relative">
+              <Home className={`h-6 w-6 ${
+                location === "/" || location === "/home" ? "text-blue-600" : "text-gray-600"
+              }`} />
+              {(location === "/" || location === "/home") && (
+                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+              )}
             </div>
-          </Link>
-
-          {/* Videos/Watch */}
-          <Link href="/videos">
-            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-videos">
-              <div className="relative">
-                <div className="relative">
-                  <svg className={`h-7 w-7 ${
-                    location === "/videos" ? "text-blue-600" : "text-gray-600"
-                  }`} fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M15.5 2.25a.75.75 0 01.75.75v18a.75.75 0 01-1.28.53L8.47 15H3.75A1.75 1.75 0 012 13.25v-2.5C2 9.784 2.784 9 3.75 9h4.72l6.5-6.53A.75.75 0 0115.5 2.25z" />
-                    <path d="M19.28 8.47a.75.75 0 00-1.06 1.06 4.5 4.5 0 010 6.36.75.75 0 001.06 1.06 6 6 0 000-8.48z" />
-                  </svg>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">1</span>
-                  </div>
-                </div>
-                {location === "/videos" && (
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-                )}
-              </div>
-            </div>
-          </Link>
-
-          {/* Groups/Friends */}
-          <Link href="/friends">
-            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-friends">
-              <div className="relative">
-                <Users className={`h-7 w-7 ${
-                  location === "/friends" ? "text-blue-600" : "text-gray-600"
-                }`} />
-                {location === "/friends" && (
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-                )}
-              </div>
-            </div>
-          </Link>
-
-          {/* Profile */}
-          <Link href="/profile">
-            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-profile">
-              <div className="relative">
-                <User className={`h-7 w-7 ${
-                  location === "/profile" ? "text-blue-600" : "text-gray-600"
-                }`} />
-                {location === "/profile" && (
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-                )}
-              </div>
-            </div>
-          </Link>
-
-          {/* Notifications */}
-          <Link href="/notifications">
-            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-notifications">
-              <div className="relative">
-                <Bell className={`h-7 w-7 ${
-                  location === "/notifications" ? "text-blue-600" : "text-gray-600"
-                }`} />
-                {unreadCount.count > 0 && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">{unreadCount.count > 99 ? '99+' : unreadCount.count}</span>
-                  </div>
-                )}
-                {location === "/notifications" && (
-                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-                )}
-              </div>
-            </div>
-          </Link>
-
-          {/* Menu */}
-          <div className="flex flex-col items-center justify-center px-4 py-2">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="relative"
-              data-testid="mobile-menu-toggle"
-            >
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                <Menu className="h-5 w-5 text-gray-600" />
-              </div>
-            </button>
           </div>
+        </Link>
+
+        {/* Videos/Watch */}
+        <Link href="/videos">
+          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-videos">
+            <div className="relative">
+              <div className="relative">
+                <Play className={`h-6 w-6 ${
+                  location === "/videos" ? "text-blue-600" : "text-gray-600"
+                }`} />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">1</span>
+                </div>
+              </div>
+              {location === "/videos" && (
+                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+              )}
+            </div>
+          </div>
+        </Link>
+
+        {/* Groups/Friends */}
+        <Link href="/friends">
+          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-friends">
+            <div className="relative">
+              <Users className={`h-6 w-6 ${
+                location === "/friends" ? "text-blue-600" : "text-gray-600"
+              }`} />
+              {location === "/friends" && (
+                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+              )}
+            </div>
+          </div>
+        </Link>
+
+        {/* Profile */}
+        <Link href="/profile">
+          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-profile">
+            <div className="relative">
+              <User className={`h-6 w-6 ${
+                location === "/profile" ? "text-blue-600" : "text-gray-600"
+              }`} />
+              {location === "/profile" && (
+                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+              )}
+            </div>
+          </div>
+        </Link>
+
+        {/* Notifications */}
+        <Link href="/notifications">
+          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-notifications">
+            <div className="relative">
+              <Bell className={`h-6 w-6 ${
+                location === "/notifications" ? "text-blue-600" : "text-gray-600"
+              }`} />
+              {unreadCount.count > 0 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">{unreadCount.count > 99 ? '99+' : unreadCount.count}</span>
+                </div>
+              )}
+              {location === "/notifications" && (
+                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+              )}
+            </div>
+          </div>
+        </Link>
+
+        {/* Menu */}
+        <div className="flex flex-col items-center justify-center px-4 py-2">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="relative"
+            data-testid="mobile-menu-toggle"
+          >
+            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+              <Menu className="h-5 w-5 text-gray-600" />
+            </div>
+          </button>
         </div>
       </div>
 
       {/* Facebook-style Dropdown Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed bottom-16 right-4 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[280px]">
+        <div className="fixed bottom-16 right-4 bg-white rounded-lg shadow-xl border border-gray-200 z-[10000] min-w-[280px]">
           <div className="p-2">
             <Link href="/saved" onClick={() => setIsMobileMenuOpen(false)}>
               <div className="flex items-center space-x-3 px-3 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200">
@@ -210,7 +205,7 @@ export default function MobileNav() {
       {/* Backdrop */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/10 z-[-1]"
+          className="fixed inset-0 bg-black/10 z-[9998]"
           onClick={() => setIsMobileMenuOpen(false)}
         ></div>
       )}
