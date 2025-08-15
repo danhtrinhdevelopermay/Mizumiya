@@ -12,7 +12,8 @@ import {
   Clock,
   MessageCircle,
   LogOut,
-  Play
+  Play,
+  UserCheck
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,97 +32,87 @@ export default function MobileNav() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[9999] bg-white shadow-lg border-t border-gray-200 md:hidden">
       {/* Main Navigation Bar */}
-      <div className="flex items-center justify-around py-2">
+      <div className="flex items-center justify-around py-3 px-2">
         {/* Home */}
         <Link href="/">
-          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-home">
-            <div className="relative">
-              <Home className={`h-6 w-6 ${
-                location === "/" || location === "/home" ? "text-blue-600" : "text-gray-600"
-              }`} />
-              {(location === "/" || location === "/home") && (
-                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-              )}
-            </div>
+          <div className="flex flex-col items-center justify-center px-3 py-1 relative" data-testid="mobile-link-home">
+            <Home className={`h-7 w-7 ${
+              location === "/" || location === "/home" ? "text-blue-600" : "text-gray-600"
+            }`} />
+            {(location === "/" || location === "/home") && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-blue-600 rounded-full"></div>
+            )}
           </div>
         </Link>
 
         {/* Videos/Watch */}
         <Link href="/videos">
-          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-videos">
+          <div className="flex flex-col items-center justify-center px-3 py-1 relative" data-testid="mobile-link-videos">
             <div className="relative">
-              <div className="relative">
-                <Play className={`h-6 w-6 ${
-                  location === "/videos" ? "text-blue-600" : "text-gray-600"
-                }`} />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">1</span>
-                </div>
+              <Play className={`h-7 w-7 ${
+                location === "/videos" ? "text-blue-600" : "text-gray-600"
+              }`} />
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-bold">1</span>
               </div>
-              {location === "/videos" && (
-                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-              )}
             </div>
+            {location === "/videos" && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-blue-600 rounded-full"></div>
+            )}
           </div>
         </Link>
 
         {/* Groups/Friends */}
         <Link href="/friends">
-          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-friends">
-            <div className="relative">
-              <Users className={`h-6 w-6 ${
-                location === "/friends" ? "text-blue-600" : "text-gray-600"
-              }`} />
-              {location === "/friends" && (
-                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-              )}
-            </div>
+          <div className="flex flex-col items-center justify-center px-3 py-1 relative" data-testid="mobile-link-friends">
+            <UserCheck className={`h-7 w-7 ${
+              location === "/friends" ? "text-blue-600" : "text-gray-600"
+            }`} />
+            {location === "/friends" && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-blue-600 rounded-full"></div>
+            )}
           </div>
         </Link>
 
         {/* Profile */}
         <Link href="/profile">
-          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-profile">
-            <div className="relative">
-              <User className={`h-6 w-6 ${
-                location === "/profile" ? "text-blue-600" : "text-gray-600"
-              }`} />
-              {location === "/profile" && (
-                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-              )}
-            </div>
+          <div className="flex flex-col items-center justify-center px-3 py-1 relative" data-testid="mobile-link-profile">
+            <User className={`h-7 w-7 ${
+              location === "/profile" ? "text-blue-600" : "text-gray-600"
+            }`} />
+            {location === "/profile" && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-blue-600 rounded-full"></div>
+            )}
           </div>
         </Link>
 
         {/* Notifications */}
         <Link href="/notifications">
-          <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-notifications">
+          <div className="flex flex-col items-center justify-center px-3 py-1 relative" data-testid="mobile-link-notifications">
             <div className="relative">
-              <Bell className={`h-6 w-6 ${
+              <Bell className={`h-7 w-7 ${
                 location === "/notifications" ? "text-blue-600" : "text-gray-600"
               }`} />
               {unreadCount.count > 0 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">{unreadCount.count > 99 ? '99+' : unreadCount.count}</span>
                 </div>
               )}
-              {location === "/notifications" && (
-                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
-              )}
             </div>
+            {location === "/notifications" && (
+              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-blue-600 rounded-full"></div>
+            )}
           </div>
         </Link>
 
         {/* Menu */}
-        <div className="flex flex-col items-center justify-center px-4 py-2">
+        <div className="flex flex-col items-center justify-center px-3 py-1">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="relative"
             data-testid="mobile-menu-toggle"
           >
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <Menu className="h-5 w-5 text-gray-600" />
-            </div>
+            <Menu className="h-7 w-7 text-gray-600" />
           </button>
         </div>
       </div>

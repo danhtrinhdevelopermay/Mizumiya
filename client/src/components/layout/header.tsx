@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, MessageCircle, Search, Home, Users, Tv, Store, Gamepad2, ChevronDown, LogOut, Settings, User, Menu, Bookmark, Calendar, Crown, Clock } from "lucide-react";
+import { Bell, MessageCircle, Search, Home, Users, Tv, Store, Gamepad2, ChevronDown, LogOut, Settings, User, Menu, Bookmark, Calendar, Crown, Clock, Plus } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
@@ -33,104 +33,64 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Left Section: Logo & Search */}
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-modern-blue-500 to-modern-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-xl font-bold">K</span>
+        <div className="flex items-center justify-between h-16">
+          {/* Left Section: Logo */}
+          <div className="flex items-center">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-xl font-bold">f</span>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-2xl font-heading font-bold bg-gradient-to-r from-modern-blue-600 to-modern-purple-600 bg-clip-text text-transparent">
-                  Kết Nối Đẹp
+                <h1 className="text-2xl font-bold text-blue-600">
+                  facebook
                 </h1>
-                <p className="text-xs text-gray-600 font-body">Professional Social Network</p>
-              </div>
-            </div>
-            
-            {/* Modern Search Bar */}
-            <div className="relative hidden md:block">
-              <input 
-                type="text"
-                placeholder="Tìm kiếm bạn bè, nội dung..."
-                className="modern-input w-72 lg:w-96 pl-12 pr-4 text-sm"
-              />
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <Search className="h-5 w-5 text-gray-400" />
               </div>
             </div>
           </div>
 
-          {/* Center Navigation - Modern style */}
-          <nav className="hidden lg:flex space-x-2">
-            <Link href="/home">
-              <div className={`flex items-center justify-center px-6 py-3 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 ${
-                location === "/" || location === "/home" 
-                  ? "bg-gradient-to-r from-modern-blue-500 to-modern-purple-500 text-white shadow-lg" 
-                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-              }`} data-testid="link-home">
-                <Home className="h-5 w-5 mr-2" />
-                <span className="font-modern text-sm">Trang chủ</span>
+          {/* Center Section: Search Bar */}
+          <div className="flex-1 max-w-md mx-4">
+            <div className="relative">
+              <input 
+                type="text"
+                placeholder="Tìm kiếm trên Facebook"
+                className="w-full bg-gray-100 rounded-full pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 border-0"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <Search className="h-4 w-4 text-gray-500" />
               </div>
-            </Link>
-            <Link href="/friends">
-              <div className={`flex items-center justify-center px-6 py-3 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 ${
-                location === "/friends" 
-                  ? "bg-gradient-to-r from-modern-blue-500 to-modern-purple-500 text-white shadow-lg" 
-                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-              }`} data-testid="link-friends">
-                <Users className="h-5 w-5 mr-2" />
-                <span className="font-modern text-sm">Bạn bè</span>
-              </div>
-            </Link>
-            <Link href="/beauty-contest">
-              <div className={`flex items-center justify-center px-6 py-3 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 ${
-                location === "/beauty-contest" 
-                  ? "bg-gradient-to-r from-modern-blue-500 to-modern-purple-500 text-white shadow-lg" 
-                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-              }`} data-testid="link-watch">
-                <Crown className="h-5 w-5 mr-2" />
-                <span className="font-modern text-sm">Cuộc thi</span>
-              </div>
-            </Link>
-            <Link href="/groups">
-              <div className={`flex items-center justify-center px-6 py-3 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 ${
-                location === "/groups" 
-                  ? "bg-gradient-to-r from-modern-blue-500 to-modern-purple-500 text-white shadow-lg" 
-                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-              }`} data-testid="link-marketplace">
-                <Store className="h-5 w-5 mr-2" />
-                <span className="font-modern text-sm">Nhóm</span>
-              </div>
-            </Link>
-          </nav>
+            </div>
+          </div>
+
 
 
 
           {/* Right Section: Actions & Profile */}
           <div className="flex items-center space-x-2">
-            {/* Notifications */}
-            <Link href="/notifications">
-              <button 
-                className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all duration-200 relative"
-                data-testid="button-notifications"
-              >
-                <Bell className="h-5 w-5 text-gray-600" />
-                {unreadCount.count > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] font-bold">
-                    {unreadCount.count > 99 ? '99+' : unreadCount.count}
-                  </span>
-                )}
-              </button>
-            </Link>
+            {/* Create/Add Button */}
+            <button 
+              className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all duration-200"
+              data-testid="button-create"
+            >
+              <Plus className="h-5 w-5 text-gray-600" />
+            </button>
+
+            {/* Search Button (Mobile) */}
+            <button 
+              className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all duration-200 md:hidden"
+              data-testid="button-search-mobile"
+            >
+              <Search className="h-5 w-5 text-gray-600" />
+            </button>
             
             {/* Messages */}
             <Link href="/messages">
               <button 
-                className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all duration-200"
+                className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all duration-200 relative"
                 data-testid="button-messages"
               >
                 <MessageCircle className="h-5 w-5 text-gray-600" />
+                {/* Notification badge for messages can be added here if needed */}
               </button>
             </Link>
 
@@ -139,24 +99,20 @@ export default function Header() {
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="flex items-center space-x-2 hover:bg-gray-100 rounded-full p-1.5 h-auto"
+                  className="flex items-center space-x-2 hover:bg-gray-100 rounded-full p-1 h-auto relative"
                   data-testid="button-profile"
                 >
                   <div className="relative">
                     <img 
                       src={user?.profileImage || "/default-avatar.jpg"} 
                       alt="User avatar" 
-                      className="w-8 h-8 rounded-full"
+                      className="w-10 h-10 rounded-full border-2 border-transparent hover:border-gray-300"
                     />
+                    {/* Notification badge */}
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">6</span>
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-gray-900 hidden md:block max-w-[120px] truncate">
-                    <UserNameWithBadge 
-                      firstName={user?.firstName || ""}
-                      lastName={user?.lastName || ""}
-                      badgeImageUrl={user?.badgeImageUrl}
-                    />
-                  </span>
-                  <ChevronDown className="h-4 w-4 text-gray-600 hidden md:block" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-lg rounded-lg">
