@@ -10,6 +10,7 @@ import { requireAuth, attachUser } from "./auth";
 import CloudinaryService from "./cloudinary";
 import { youtubeService } from "./youtube";
 import { youtubeExtractor } from "./youtube-extractor";
+import tiktokRoutes from "./routes/tiktok";
 import { 
   insertPostSchema, 
   insertCommentSchema, 
@@ -1644,6 +1645,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       alt: `Placeholder ${size}x${size}` 
     });
   });
+
+  // TikTok API routes
+  app.use('/api/tiktok', tiktokRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

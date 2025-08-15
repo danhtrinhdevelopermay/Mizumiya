@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { Heart, MessageCircle, Share, BookmarkPlus, Music, MoreHorizontal, Play, Pause } from 'lucide-react';
+import { Heart, MessageCircle, Share, BookmarkPlus, Music, MoreHorizontal, Play, Pause, RefreshCw } from 'lucide-react';
 import Layout from '@/components/layout/layout';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useQuery } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
-interface Reel {
+interface TikTokVideo {
   id: string;
   videoUrl: string;
+  webmUrl?: string;
   thumbnail: string;
   caption: string;
   user: {
@@ -14,7 +17,7 @@ interface Reel {
     username: string;
     displayName: string;
     avatar: string;
-    isVerified?: boolean;
+    isVerified: boolean;
   };
   music: {
     title: string;
@@ -24,88 +27,50 @@ interface Reel {
     likes: number;
     comments: number;
     shares: number;
+    views: number;
   };
+  createdTime: number;
+}
+
+interface Reel extends TikTokVideo {
   isLiked: boolean;
 }
 
-// Sample reel data - in a real app, this would come from an API
-const SAMPLE_REELS: Reel[] = [
-  {
-    id: '1',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    thumbnail: 'https://picsum.photos/400/600?random=1',
-    caption: 'Beautiful sunset vibes! 🌅 What do you think about this amazing view? #sunset #nature #beautiful',
-    user: {
-      id: 'user1',
-      username: 'naturelover',
-      displayName: 'Nature Lover',
-      avatar: 'https://picsum.photos/100/100?random=1',
-      isVerified: true,
-    },
-    music: {
-      title: 'Chill Vibes',
-      artist: 'Relaxing Music',
-    },
-    stats: {
-      likes: 15200,
-      comments: 234,
-      shares: 45,
-    },
-    isLiked: false,
-  },
-  {
-    id: '2',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    thumbnail: 'https://picsum.photos/400/600?random=2',
-    caption: 'Dancing through the night! 💃✨ #dance #fun #nightlife',
-    user: {
-      id: 'user2',
-      username: 'dancequeen',
-      displayName: 'Dance Queen',
-      avatar: 'https://picsum.photos/100/100?random=2',
-    },
-    music: {
-      title: 'Upbeat Dance',
-      artist: 'Party Mix',
-    },
-    stats: {
-      likes: 8900,
-      comments: 156,
-      shares: 67,
-    },
-    isLiked: true,
-  },
-  {
-    id: '3',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    thumbnail: 'https://picsum.photos/400/600?random=3',
-    caption: 'Cooking tips that will change your life! 👨‍🍳🔥 #cooking #tips #food',
-    user: {
-      id: 'user3',
-      username: 'chefpro',
-      displayName: 'Chef Pro',
-      avatar: 'https://picsum.photos/100/100?random=3',
-      isVerified: true,
-    },
-    music: {
-      title: 'Kitchen Beats',
-      artist: 'Cooking Sounds',
-    },
-    stats: {
-      likes: 23400,
-      comments: 445,
-      shares: 123,
-    },
-    isLiked: false,
-  },
-];
 
 export default function ReelsPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [reels, setReels] = useState(SAMPLE_REELS);
+  const [reels, setReels] = useState<Reel[]>([]);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('viral');
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({});
+  const { toast } = useToast();
+
+  // Fetch TikTok videos
+  const { data: tiktokData, isLoading, error, refetch } = useQuery({
+    queryKey: ['/api/tiktok/trending', searchQuery],
+    queryFn: async () => {
+      const response = await fetch('/api/tiktok/trending?limit=15', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch TikTok videos');
+      }
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Convert TikTok videos to reels format and add isLiked property
+  useEffect(() => {
+    if (tiktokData?.videos) {
+      const convertedReels: Reel[] = tiktokData.videos.map((video: TikTokVideo) => ({
+        ...video,
+        isLiked: Math.random() > 0.8 // Random liked state
+      }));
+      setReels(convertedReels);
+    }
+  }, [tiktokData]);
 
   const formatCount = (count: number) => {
     if (count >= 1000000) {
@@ -114,6 +79,14 @@ export default function ReelsPage() {
       return `${(count / 1000).toFixed(1)}K`;
     }
     return count.toString();
+  };
+
+  const refreshVideos = () => {
+    refetch();
+    toast({
+      title: "Đang tải video mới",
+      description: "Đang lấy video TikTok mới nhất...",
+    });
   };
 
   const toggleLike = (reelId: string) => {
@@ -171,12 +144,51 @@ export default function ReelsPage() {
   };
 
   useEffect(() => {
-    // Auto-play the first video when component mounts
-    const firstVideo = videoRefs.current[reels[0].id];
-    if (firstVideo) {
-      firstVideo.play();
+    // Auto-play the first video when reels are loaded
+    if (reels.length > 0) {
+      const firstVideo = videoRefs.current[reels[0].id];
+      if (firstVideo) {
+        firstVideo.play();
+      }
     }
-  }, []);
+  }, [reels]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="h-screen flex items-center justify-center bg-black">
+          <div className="text-center text-white">
+            <RefreshCw className="w-12 h-12 animate-spin mx-auto mb-4" />
+            <p className="text-xl">Đang tải video TikTok...</p>
+            <p className="text-sm opacity-70 mt-2">Vui lòng đợi một chút</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || reels.length === 0) {
+    return (
+      <Layout>
+        <div className="h-screen flex items-center justify-center bg-black">
+          <div className="text-center text-white max-w-md px-4">
+            <div className="text-6xl mb-4">😔</div>
+            <h2 className="text-2xl font-bold mb-2">Không thể tải video</h2>
+            <p className="text-gray-300 mb-6">
+              {error ? 'Có lỗi xảy ra khi tải video TikTok' : 'Không tìm thấy video nào'}
+            </p>
+            <Button 
+              onClick={refreshVideos}
+              className="bg-pink-600 hover:bg-pink-700 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Thử lại
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -354,9 +366,23 @@ export default function ReelsPage() {
                 </div>
               </div>
 
-              {/* Progress Indicator */}
-              <div className="absolute top-4 right-4 text-white text-xs bg-black/30 px-2 py-1 rounded-full">
-                {index + 1} / {reels.length}
+              {/* Progress Indicator & Refresh Button */}
+              <div className="absolute top-4 right-4 flex items-center space-x-2">
+                <Button
+                  onClick={refreshVideos}
+                  size="sm"
+                  className="bg-black/30 hover:bg-black/50 text-white border-0 h-8 w-8 p-0"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+                <div className="text-white text-xs bg-black/30 px-2 py-1 rounded-full">
+                  {index + 1} / {reels.length}
+                </div>
+              </div>
+
+              {/* TikTok Data Source Label */}
+              <div className="absolute top-4 left-4 text-white text-xs bg-black/30 px-2 py-1 rounded-full">
+                📱 TikTok Live
               </div>
             </div>
           ))}
