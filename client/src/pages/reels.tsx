@@ -109,7 +109,7 @@ export default function ReelsPage() {
   };
 
   const togglePlayPause = () => {
-    const currentVideo = videoRefs.current[reels[currentIndex].id];
+    const currentVideo = videoRefs.current[reels[currentIndex]?.id];
     if (currentVideo) {
       if (isPlaying) {
         currentVideo.pause();
@@ -131,12 +131,12 @@ export default function ReelsPage() {
     if (newIndex !== currentIndex && newIndex >= 0 && newIndex < reels.length) {
       setCurrentIndex(newIndex);
       
-      // Pause all videos except the current one
+      // Pause all videos except the current one (only for direct video elements)
       Object.entries(videoRefs.current).forEach(([id, video]) => {
-        if (id === reels[newIndex].id) {
+        if (id === reels[newIndex]?.id && !reels[newIndex]?.videoUrl.includes('tiktok.com')) {
           video.play();
           setIsPlaying(true);
-        } else {
+        } else if (!reels[newIndex]?.videoUrl.includes('tiktok.com')) {
           video.pause();
         }
       });
@@ -144,8 +144,8 @@ export default function ReelsPage() {
   };
 
   useEffect(() => {
-    // Auto-play the first video when reels are loaded
-    if (reels.length > 0) {
+    // Auto-play the first video when reels are loaded (only for direct video elements)
+    if (reels.length > 0 && !reels[0]?.videoUrl.includes('tiktok.com')) {
       const firstVideo = videoRefs.current[reels[0].id];
       if (firstVideo) {
         firstVideo.play();
@@ -204,22 +204,39 @@ export default function ReelsPage() {
               key={reel.id}
               className="relative h-screen snap-start flex items-center justify-center"
             >
-              {/* Video */}
-              <video
-                ref={(el) => {
-                  if (el) videoRefs.current[reel.id] = el;
-                }}
-                className="absolute inset-0 w-full h-full object-cover"
-                src={reel.videoUrl}
-                loop
-                muted
-                playsInline
-                poster={reel.thumbnail}
-                onClick={togglePlayPause}
-              />
+              {/* Video - Using TikTok Embed or fallback video */}
+              {reel.videoUrl.includes('tiktok.com') ? (
+                <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
+                  {/* TikTok Embed */}
+                  <iframe
+                    src={`https://www.tiktok.com/embed/v2/${reel.id}?lang=en-US`}
+                    className="w-full h-full border-0"
+                    allow="encrypted-media;"
+                    allowFullScreen
+                  />
+                  {/* Fallback image if embed fails */}
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center opacity-30"
+                    style={{ backgroundImage: `url(${reel.thumbnail})` }}
+                  />
+                </div>
+              ) : (
+                <video
+                  ref={(el) => {
+                    if (el) videoRefs.current[reel.id] = el;
+                  }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  src={reel.videoUrl}
+                  loop
+                  muted
+                  playsInline
+                  poster={reel.thumbnail}
+                  onClick={togglePlayPause}
+                />
+              )}
               
-              {/* Play/Pause Button Overlay */}
-              {!isPlaying && index === currentIndex && (
+              {/* Play/Pause Button Overlay - Only show for direct video elements */}
+              {!isPlaying && index === currentIndex && !reel.videoUrl.includes('tiktok.com') && (
                 <div className="absolute inset-0 flex items-center justify-center z-10">
                   <Button
                     variant="ghost"

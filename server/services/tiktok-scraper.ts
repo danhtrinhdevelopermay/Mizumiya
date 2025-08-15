@@ -205,32 +205,75 @@ export class TikTokScraper {
   private getFallbackVideos(query: string, maxVideos: number): TikTokVideo[] {
     console.log('📦 Using fallback video data...');
     
+    // Working sample video URLs
+    const sampleVideos = [
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4'
+    ];
+
+    const captions = [
+      `🔥 ${query} content that'll blow your mind! #${query} #viral #fyp #amazing`,
+      `Just discovered this ${query} trend! 😱 Who else is obsessed? #${query} #trending`,
+      `POV: You found the perfect ${query} video 💫 #${query} #viral #satisfying`,
+      `This ${query} hack changed my life! 🤯 Save this for later #${query} #lifehack`,
+      `Can't stop watching this ${query} content! 🔄 #${query} #addictive #viral`,
+      `${query} vibes only ✨ Drop a 🔥 if you agree #${query} #mood #aesthetic`,
+      `Everyone needs to see this ${query}! 📸 Tag your friends #${query} #viral`,
+      `${query} energy is unmatched 💯 #${query} #positive #inspiring`,
+      `Wait for the ${query} part... 😮 #${query} #surprising #satisfying`,
+      `New ${query} just dropped! 🚀 What do you think? #${query} #fresh #trending`
+    ];
+
+    const usernames = [
+      'viralking', 'trendqueen', 'contenthero', 'videolover', 'socialmedia_star',
+      'creative_soul', 'funnyvideos', 'lifestyle_guru', 'music_addict', 'dance_fever',
+      'comedy_central', 'art_creator', 'food_lover', 'travel_bug', 'fitness_freak'
+    ];
+
+    const musicTitles = [
+      'Viral Sound', 'Trending Beat', 'Hot Track', 'Popular Song', 'Dance Hit',
+      'Chill Vibes', 'Upbeat Mix', 'Catchy Tune', 'Fire Beat', 'Smooth Flow'
+    ];
+    
     const fallbackVideos: TikTokVideo[] = [];
     
     for (let i = 0; i < maxVideos; i++) {
+      const username = usernames[i % usernames.length];
+      const videoUrl = sampleVideos[i % sampleVideos.length];
+      const caption = captions[i % captions.length];
+      const musicTitle = musicTitles[i % musicTitles.length];
+
       fallbackVideos.push({
-        id: `fallback_${Date.now()}_${i}`,
-        videoUrl: `https://www.tiktok.com/@user${i}/video/123456789${i}`,
+        id: `video_${Date.now()}_${i}`,
+        videoUrl: videoUrl,
         thumbnail: `https://picsum.photos/400/600?random=${i + Date.now()}`,
-        caption: `${query} content #${i + 1} - Amazing video you'll love! 🔥✨ #${query} #viral #fyp`,
+        caption: caption,
         user: {
-          id: `user${i}`,
-          username: `creator${i}`,
-          displayName: `Content Creator ${i + 1}`,
+          id: `user_${i}`,
+          username: username,
+          displayName: username.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
           avatar: `https://picsum.photos/100/100?random=${i + 100}`,
           isVerified: i % 3 === 0
         },
         music: {
-          title: `Trending Sound ${i + 1}`,
-          artist: `Artist ${i + 1}`
+          title: musicTitle,
+          artist: username
         },
         stats: {
-          likes: Math.floor(Math.random() * 100000) + 1000,
-          comments: Math.floor(Math.random() * 2000) + 50,
-          shares: Math.floor(Math.random() * 1000) + 10,
-          views: Math.floor(Math.random() * 1000000) + 10000
+          likes: Math.floor(Math.random() * 500000) + 10000,
+          comments: Math.floor(Math.random() * 5000) + 100,
+          shares: Math.floor(Math.random() * 2000) + 50,
+          views: Math.floor(Math.random() * 2000000) + 50000
         },
-        createdTime: Date.now() - Math.floor(Math.random() * 86400000 * 30)
+        createdTime: Date.now() - Math.floor(Math.random() * 86400000 * 7) // Within last week
       });
     }
     
