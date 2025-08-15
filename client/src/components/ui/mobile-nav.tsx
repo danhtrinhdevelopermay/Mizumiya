@@ -1,8 +1,21 @@
 import { useState } from "react";
-import { Home, Users, Calendar, Settings, Menu, Bell, MessageCircle, Bookmark, User, LogOut, Tv, Store } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { 
+  Home, 
+  Users, 
+  User, 
+  Bell, 
+  Menu,
+  Bookmark,
+  Calendar,
+  Store,
+  Clock,
+  MessageCircle,
+  LogOut,
+  Tv
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function MobileNav() {
   const [location] = useLocation();
@@ -15,172 +28,189 @@ export default function MobileNav() {
     refetchInterval: 30000,
   });
 
-  // Main navigation items matching the kawaii design
-  const mainNavItems = [
-    { href: "/", icon: Home, testId: "mobile-link-home" },
-    { href: "/friends", icon: Users, testId: "mobile-link-friends" },
-    { href: "/events", icon: Calendar, testId: "mobile-link-events" },
-    { href: "/settings", icon: Settings, testId: "mobile-link-settings" },
-  ];
-
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50" data-testid="mobile-nav">
-      {/* Kawaii Navigation Container */}
-      <div className="flex items-center justify-center pb-8 pt-4 px-4">
-        <div className="bg-gradient-to-r from-orange-200 via-yellow-200 to-orange-300 rounded-full p-2 shadow-2xl border border-white/20">
-          <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg">
-            <div className="flex items-center space-x-6">
-              {mainNavItems.map((item) => {
-                const isActive = location === item.href || (item.href === "/" && location === "/home");
-                const Icon = item.icon;
-                
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <div 
-                      className={`relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 transform hover:scale-110 ${
-                        isActive 
-                          ? "bg-gradient-to-br from-orange-400 to-yellow-400 shadow-lg scale-110" 
-                          : "bg-gray-100/80 hover:bg-orange-100"
-                      }`}
-                      data-testid={item.testId}
-                    >
-                      <Icon className={`h-6 w-6 transition-colors duration-200 ${
-                        isActive ? "text-white" : "text-gray-600"
-                      }`} />
-                      
-                      {/* Active indicator dot */}
-                      {isActive && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
+      {/* Facebook-style Navigation */}
+      <div className="bg-white border-t border-gray-200 shadow-lg">
+        <div className="flex items-center justify-around py-2">
+          {/* Home */}
+          <Link href="/">
+            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-home">
+              <div className="relative">
+                <Home className={`h-7 w-7 ${
+                  location === "/" || location === "/home" ? "text-blue-600" : "text-gray-600"
+                }`} />
+                {(location === "/" || location === "/home") && (
+                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+                )}
+              </div>
             </div>
+          </Link>
+
+          {/* Videos/Watch */}
+          <Link href="/videos">
+            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-videos">
+              <div className="relative">
+                <div className="relative">
+                  <svg className={`h-7 w-7 ${
+                    location === "/videos" ? "text-blue-600" : "text-gray-600"
+                  }`} fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M15.5 2.25a.75.75 0 01.75.75v18a.75.75 0 01-1.28.53L8.47 15H3.75A1.75 1.75 0 012 13.25v-2.5C2 9.784 2.784 9 3.75 9h4.72l6.5-6.53A.75.75 0 0115.5 2.25z" />
+                    <path d="M19.28 8.47a.75.75 0 00-1.06 1.06 4.5 4.5 0 010 6.36.75.75 0 001.06 1.06 6 6 0 000-8.48z" />
+                  </svg>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">1</span>
+                  </div>
+                </div>
+                {location === "/videos" && (
+                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+                )}
+              </div>
+            </div>
+          </Link>
+
+          {/* Groups/Friends */}
+          <Link href="/friends">
+            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-friends">
+              <div className="relative">
+                <Users className={`h-7 w-7 ${
+                  location === "/friends" ? "text-blue-600" : "text-gray-600"
+                }`} />
+                {location === "/friends" && (
+                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+                )}
+              </div>
+            </div>
+          </Link>
+
+          {/* Profile */}
+          <Link href="/profile">
+            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-profile">
+              <div className="relative">
+                <User className={`h-7 w-7 ${
+                  location === "/profile" ? "text-blue-600" : "text-gray-600"
+                }`} />
+                {location === "/profile" && (
+                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+                )}
+              </div>
+            </div>
+          </Link>
+
+          {/* Notifications */}
+          <Link href="/notifications">
+            <div className="flex flex-col items-center justify-center px-4 py-2" data-testid="mobile-link-notifications">
+              <div className="relative">
+                <Bell className={`h-7 w-7 ${
+                  location === "/notifications" ? "text-blue-600" : "text-gray-600"
+                }`} />
+                {unreadCount.count > 0 && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">{unreadCount.count > 99 ? '99+' : unreadCount.count}</span>
+                  </div>
+                )}
+                {location === "/notifications" && (
+                  <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-blue-600 rounded-full"></div>
+                )}
+              </div>
+            </div>
+          </Link>
+
+          {/* Menu */}
+          <div className="flex flex-col items-center justify-center px-4 py-2">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="relative"
+              data-testid="mobile-menu-toggle"
+            >
+              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <Menu className="h-5 w-5 text-gray-600" />
+              </div>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Secondary Navigation Dropdown */}
-      <div className="absolute bottom-20 right-4">
-        <div className="relative">
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`w-14 h-14 rounded-full transition-all duration-300 transform hover:scale-110 flex items-center justify-center shadow-xl ${
-              isMobileMenuOpen 
-                ? "bg-gradient-to-br from-pink-400 to-rose-400 rotate-45" 
-                : "bg-gradient-to-br from-purple-400 to-blue-400"
-            }`}
-            data-testid="mobile-menu-toggle"
-          >
-            <Menu className="h-6 w-6 text-white" />
-          </button>
-          
-          {/* Kawaii Dropdown Menu */}
-          {isMobileMenuOpen && (
-            <div className="absolute bottom-full right-0 mb-4 w-72 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-orange-200/30 py-4 px-2 transform transition-all duration-300 scale-100 origin-bottom-right">
-              <div className="space-y-2">
-                <Link href="/saved">
-                  <div 
-                    className="flex items-center space-x-4 px-4 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center shadow-md">
-                      <Bookmark className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-gray-800 font-medium">💖 Đã lưu</span>
-                  </div>
-                </Link>
-                
-                <Link href="/videos">
-                  <div 
-                    className="flex items-center space-x-4 px-4 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center shadow-md">
-                      <Tv className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-gray-800 font-medium">📺 Video kawaii</span>
-                  </div>
-                </Link>
-                
-                <Link href="/beauty-contest">
-                  <div 
-                    className="flex items-center space-x-4 px-4 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full flex items-center justify-center shadow-md">
-                      <Store className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-gray-800 font-medium">👑 Cuộc thi sắc đẹp</span>
-                  </div>
-                </Link>
-                
-                <Link href="/notifications">
-                  <div 
-                    className="flex items-center space-x-4 px-4 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-md relative">
-                      <Bell className="h-5 w-5 text-white" />
-                      {unreadCount.count > 0 && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold border-2 border-white">
-                          {unreadCount.count > 9 ? '9+' : unreadCount.count}
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-gray-800 font-medium">🔔 Thông báo</span>
-                  </div>
-                </Link>
-                
-                <Link href="/messages">
-                  <div 
-                    className="flex items-center space-x-4 px-4 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center shadow-md">
-                      <MessageCircle className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-gray-800 font-medium">💬 Tin nhắn</span>
-                  </div>
-                </Link>
-                
-                <Link href="/profile">
-                  <div 
-                    className="flex items-center space-x-4 px-4 py-3 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 rounded-2xl transition-all duration-200 transform hover:scale-105"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-full flex items-center justify-center shadow-md">
-                      <User className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-gray-800 font-medium">👤 Hồ sơ cá nhân</span>
-                  </div>
-                </Link>
-                
-                <div className="border-t border-orange-200/50 my-3 mx-4"></div>
-                
-                <button
-                  onClick={() => {
-                    signOut.mutate();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="flex items-center space-x-4 px-4 py-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 rounded-2xl transition-all duration-200 transform hover:scale-105 w-full text-left"
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-pink-400 rounded-full flex items-center justify-center shadow-md">
-                    <LogOut className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="text-red-600 font-medium">👋 Đăng xuất</span>
-                </button>
+      {/* Facebook-style Dropdown Menu */}
+      {isMobileMenuOpen && (
+        <div className="fixed bottom-16 right-4 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[280px]">
+          <div className="p-2">
+            <Link href="/saved" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="flex items-center space-x-3 px-3 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200">
+                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Bookmark className="h-5 w-5 text-gray-600" />
+                </div>
+                <span className="text-gray-800 font-medium">Đã lưu</span>
               </div>
-            </div>
-          )}
+            </Link>
+            
+            <Link href="/events" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="flex items-center space-x-3 px-3 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200">
+                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-gray-600" />
+                </div>
+                <span className="text-gray-800 font-medium">Sự kiện</span>
+              </div>
+            </Link>
+            
+            <Link href="/marketplace" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="flex items-center space-x-3 px-3 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200">
+                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Store className="h-5 w-5 text-gray-600" />
+                </div>
+                <span className="text-gray-800 font-medium">Marketplace</span>
+              </div>
+            </Link>
+
+            <Link href="/groups" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="flex items-center space-x-3 px-3 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200">
+                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Users className="h-5 w-5 text-gray-600" />
+                </div>
+                <span className="text-gray-800 font-medium">Nhóm</span>
+              </div>
+            </Link>
+
+            <Link href="/memories" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="flex items-center space-x-3 px-3 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200">
+                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-gray-600" />
+                </div>
+                <span className="text-gray-800 font-medium">Kỷ niệm</span>
+              </div>
+            </Link>
+
+            <Link href="/messages" onClick={() => setIsMobileMenuOpen(false)}>
+              <div className="flex items-center space-x-3 px-3 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200">
+                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+                  <MessageCircle className="h-5 w-5 text-gray-600" />
+                </div>
+                <span className="text-gray-800 font-medium">Tin nhắn</span>
+              </div>
+            </Link>
+            
+            <div className="border-t border-gray-200 my-2"></div>
+            
+            <button
+              onClick={() => {
+                signOut.mutate();
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center space-x-3 px-3 py-3 hover:bg-gray-100 rounded-lg transition-all duration-200 w-full"
+            >
+              <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+                <LogOut className="h-5 w-5 text-gray-600" />
+              </div>
+              <span className="text-gray-800 font-medium">Đăng xuất</span>
+            </button>
+          </div>
         </div>
-      </div>
-      
-      {/* Kawaii Overlay */}
+      )}
+
+      {/* Backdrop */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-gradient-to-b from-orange-100/20 to-pink-100/20 backdrop-blur-sm z-[-1]"
+          className="fixed inset-0 bg-black/10 z-[-1]"
           onClick={() => setIsMobileMenuOpen(false)}
         ></div>
       )}

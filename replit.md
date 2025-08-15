@@ -17,13 +17,14 @@ The application is built with a clear separation of concerns, employing a client
 - **Styling:** TailwindCSS for utility-first styling
 - **Routing:** Wouter for lightweight client-side routing
 - **State Management:** React Query for efficient data fetching and caching.
-- **UI/UX Design:** The application has evolved through several design iterations, currently featuring a "kawaii" (cute) aesthetic with pastel color palettes, decorative elements, and playful animations. This includes:
-    - Kawaii pill-shaped bottom navigation with orange/yellow gradients.
+- **UI/UX Design:** The application has evolved through several design iterations, currently featuring a Facebook-inspired mobile interface design. This includes:
+    - Facebook-style horizontal bottom navigation with clean white background, simple icons, and blue accent colors for active states.
+    - Minimalist navigation bar with Home, Videos (with notification badge), Friends, Profile, Notifications, and Menu icons.
+    - Clean dropdown menu from the menu button with gray backgrounds and simple hover effects.
     - Facebook-style simple layout for post creation with an avatar, rounded input, and photo icon.
-    - Post cards redesigned to match a clean white card aesthetic with specific avatar styling, reaction layouts, and simple action buttons.
-    - Stories section with a kawaii design, including pink pastel containers, decorative elements, and gender-based gradient color schemes for story cards.
-    - Login and Signup interfaces with kawaii/cute aesthetics, featuring pink/beige backgrounds, decorative flowers, and cartoon mascots.
-    - Custom kawaii component classes, pastel color system integration in Tailwind config, and kawaii animations (bounce-gentle, wiggle, float, kawaii-pulse, sparkle) are used throughout.
+    - Post cards designed to match a clean white card aesthetic with specific avatar styling, reaction layouts, and simple action buttons.
+    - Stories section maintains existing design structure.
+    - Login and Signup interfaces with clean, professional styling.
 
 **Backend:**
 - **Framework:** Express.js with TypeScript
