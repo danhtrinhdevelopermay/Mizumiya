@@ -46,8 +46,10 @@ export class TikTokScraper {
   private async initBrowser() {
     if (!this.browser) {
       try {
+        console.log('🚀 Initializing Chromium browser for TikTok scraping...');
         this.browser = await puppeteer.launch({
           headless: true,
+          executablePath: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
           args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -63,19 +65,35 @@ export class TikTokScraper {
             '--disable-background-networking',
             '--disable-features=TranslateUI',
             '--disable-ipc-flooding-protection',
+            '--disable-blink-features=AutomationControlled',
+            '--disable-features=VizDisplayCompositor',
+            '--single-process',
+            '--no-zygote',
+            '--disable-accelerated-2d-canvas',
+            '--disable-accelerated-jpeg-decoding',
+            '--disable-accelerated-mjpeg-decode',
+            '--disable-accelerated-video-decode',
+            '--disable-accelerated-video-encode',
+            '--disable-gpu-sandbox',
+            '--disable-software-rasterizer',
+            '--disable-features=WebRtcHideLocalIpsWithMdns'
           ],
         });
+        console.log('✅ Chromium browser initialized successfully');
       } catch (error) {
-        console.error('❌ Failed to launch Chrome browser:', error);
+        console.error('❌ Failed to launch Chromium browser:', error);
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         
-        if (errorMsg.includes('libglib') || errorMsg.includes('shared libraries')) {
-          throw new Error('Chrome browser dependencies are missing. This environment doesn\'t support running Chrome.');
-        } else if (errorMsg.includes('Chrome')) {
-          throw new Error('Chrome browser is not available or properly installed.');
+        if (errorMsg.includes('No such file')) {
+          throw new Error('Chromium executable not found at expected path. Browser installation may be incomplete.');
+        } else if (errorMsg.includes('permission denied')) {
+          throw new Error('Permission denied accessing Chromium. Check file permissions.');
+        } else if (errorMsg.includes('ENOENT')) {
+          throw new Error('Chromium binary not found or not executable.');
         }
         
-        throw error;
+        console.error('Full Chromium launch error:', error);
+        throw new Error(`Failed to launch Chromium for TikTok scraping: ${errorMsg}`);
       }
     }
     return this.browser;
