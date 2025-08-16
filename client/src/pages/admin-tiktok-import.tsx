@@ -125,12 +125,12 @@ export default function AdminTikTokImport() {
       return;
     }
 
-    // Validate TikTok URL
-    const tiktokUrlPattern = /(tiktok\\.com|vm\\.tiktok\\.com)/;
+    // Validate TikTok URL - more comprehensive pattern
+    const tiktokUrlPattern = /(tiktok\.com|vm\.tiktok\.com)/i;
     if (!tiktokUrlPattern.test(tiktokUrl)) {
       toast({
         title: "❌ URL không hợp lệ",
-        description: "Vui lòng nhập URL TikTok hợp lệ",
+        description: "Vui lòng nhập URL TikTok hợp lệ (ví dụ: https://www.tiktok.com/@username/video/...)",
         variant: "destructive",
       });
       return;
