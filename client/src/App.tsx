@@ -28,6 +28,7 @@ import AdminDatabaseStatus from "@/pages/AdminDatabaseStatus";
 import StoryDetail from "@/pages/story-detail";
 import BeautyContest from "@/pages/beauty-contest";
 import AdminBeautyContest from "@/pages/admin-beauty-contest";
+import AdminTikTokImport from "@/pages/admin-tiktok-import";
 import StorageManagement from "@/pages/storage-management";
 import VideosPage from "@/pages/videos";
 import ReelsPage from "@/pages/reels";
@@ -92,6 +93,7 @@ function AuthenticatedRoutes() {
       <Route path="/story/:storyId" component={StoryDetail} />
       <Route path="/beauty-contest" component={BeautyContest} />
       <Route path="/admin/beauty-contest" component={AdminBeautyContest} />
+      <Route path="/admin/tiktok-import" component={AdminTikTokImport} />
       <Route path="/admin/storage" component={StorageManagement} />
       <Route path="/videos" component={VideosPage} />
       <Route path="/reels" component={ReelsPage} />

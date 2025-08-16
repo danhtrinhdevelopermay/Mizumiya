@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { User } from "@shared/schema";
-import { Shield, Users, Key, Search, Trash2, UserPlus, Image, Crown, Database } from "lucide-react";
+import { Shield, Users, Key, Search, Trash2, UserPlus, Image, Crown, Database, Video } from "lucide-react";
 import { Link } from "wouter";
 import { UserNameWithBadge } from "@/components/ui/user-name-with-badge";
 
@@ -201,6 +201,13 @@ export default function AdminDashboard() {
               <Database className="h-4 w-4" />
               Quản lý lưu trữ
             </Link>
+            <Link 
+              href="/admin/tiktok-import" 
+              className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+            >
+              <Video className="h-4 w-4" />
+              TikTok Import
+            </Link>
           </div>
         </div>
 
@@ -312,7 +319,7 @@ export default function AdminDashboard() {
                                     <div>
                                       <Label>Preview:</Label>
                                       <img 
-                                        src={selectedUserForBadge === user.id ? badgeImageUrl : user.badgeImageUrl}
+                                        src={selectedUserForBadge === user.id ? badgeImageUrl : (user.badgeImageUrl || '')}
                                         alt="Badge preview"
                                         className="w-8 h-8 rounded object-cover mt-2"
                                         onError={(e) => {

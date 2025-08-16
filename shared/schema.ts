@@ -361,3 +361,52 @@ export type BeautyVote = typeof beautyVotes.$inferSelect;
 export type InsertBeautyVote = z.infer<typeof insertBeautyVoteSchema>;
 export type UserDailyVotes = typeof userDailyVotes.$inferSelect;
 export type InsertUserDailyVotes = z.infer<typeof insertUserDailyVotesSchema>;
+
+// TikTok Import Tables
+export const tiktokAccounts = pgTable("tiktok_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tiktokUsername: text("tiktok_username").notNull().unique(),
+  tiktokUserId: text("tiktok_user_id"),
+  displayName: text("display_name").notNull(),
+  avatar: text("avatar"),
+  followerCount: integer("follower_count").default(0),
+  followingCount: integer("following_count").default(0),
+  likesCount: integer("likes_count").default(0),
+  videoCount: integer("video_count").default(0),
+  verified: boolean("verified").default(false),
+  signature: text("signature"), // bio
+  appUserId: varchar("app_user_id").references(() => users.id), // linked user in our app
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`)
+});
+
+export const tiktokImports = pgTable("tiktok_imports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tiktokAccountId: varchar("tiktok_account_id").references(() => tiktokAccounts.id).notNull(),
+  tiktokVideoId: text("tiktok_video_id").notNull().unique(),
+  originalUrl: text("original_url").notNull(),
+  postId: varchar("post_id").references(() => posts.id),
+  status: text("status").default("pending"), // pending, processing, completed, failed
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`)
+});
+
+// TikTok Import Schemas
+export const insertTiktokAccountSchema = createInsertSchema(tiktokAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTiktokImportSchema = createInsertSchema(tiktokImports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// TikTok Import Types
+export type TiktokAccount = typeof tiktokAccounts.$inferSelect;
+export type InsertTiktokAccount = z.infer<typeof insertTiktokAccountSchema>;
+export type TiktokImport = typeof tiktokImports.$inferSelect;
+export type InsertTiktokImport = z.infer<typeof insertTiktokImportSchema>;

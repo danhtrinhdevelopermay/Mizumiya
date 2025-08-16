@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { TikTokScraper } from '../services/tiktok-scraper.js';
+import { tiktokImportService } from '../services/tiktok-import.js';
+import { storage } from '../storage.js';
 import { requireAuth } from '../auth.js';
 
 const router = Router();
@@ -141,6 +143,83 @@ router.get('/hashtag/:tag', requireAuth, async (req, res) => {
         'TikTok hashtag service is temporarily unavailable. Please try again later.',
       hashtag: tag,
       suggestion: 'Please try again with a different hashtag or try again later.'
+    });
+  }
+});
+
+// Admin TikTok Import Routes
+router.post('/admin/import', requireAuth, async (req, res) => {
+  try {
+    const { url } = req.body;
+    
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'TikTok URL is required'
+      });
+    }
+    
+    console.log(`🎬 Admin importing TikTok video: ${url}`);
+    
+    const result = await tiktokImportService.importVideoFromUrl(url);
+    
+    res.json(result);
+    
+  } catch (error) {
+    console.error('❌ TikTok import error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    res.status(500).json({
+      success: false,
+      message: 'Failed to import TikTok video',
+      error: errorMessage
+    });
+  }
+});
+
+// Get import history
+router.get('/admin/imports', requireAuth, async (req, res) => {
+  try {
+    const { limit = '50' } = req.query;
+    const maxLimit = Math.min(parseInt(limit as string) || 50, 100);
+    
+    const imports = await storage.getTiktokImports(maxLimit);
+    
+    res.json({
+      success: true,
+      imports
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching TikTok imports:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch import history',
+      error: errorMessage
+    });
+  }
+});
+
+// Get TikTok accounts
+router.get('/admin/accounts', requireAuth, async (req, res) => {
+  try {
+    // This would need a new storage method to get all TikTok accounts
+    // For now, return empty array
+    res.json({
+      success: true,
+      accounts: []
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching TikTok accounts:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch TikTok accounts',
+      error: errorMessage
     });
   }
 });

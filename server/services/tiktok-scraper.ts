@@ -360,6 +360,167 @@ export class TikTokScraper {
   }
 
 
+  // New method to extract video data from URL
+  public async extractVideoFromUrl(url: string): Promise<TikTokVideo> {
+    console.log(`🎯 Extracting TikTok video from URL: ${url}`);
+    
+    // Extract video ID from URL
+    const videoId = this.extractVideoIdFromUrl(url);
+    if (!videoId) {
+      throw new Error(`Invalid TikTok URL: ${url}`);
+    }
+
+    try {
+      const browser = await this.initBrowser();
+      const page = await browser.newPage();
+      
+      // Set user agent to avoid detection
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      
+      console.log(`🌐 Navigating to: ${url}`);
+      await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+      
+      // Wait for content to load
+      await page.waitForTimeout(3000);
+      
+      // Extract video data
+      const videoData = await page.evaluate(() => {
+        // Try to find JSON data in script tags
+        const scripts = document.getElementsByTagName('script');
+        for (let script of scripts) {
+          if (script.textContent && script.textContent.includes('window.__UNIVERSAL_DATA_FOR_REHYDRATION__')) {
+            try {
+              const match = script.textContent.match(/window\.__UNIVERSAL_DATA_FOR_REHYDRATION__\s*=\s*({.+});/);
+              if (match) {
+                const data = JSON.parse(match[1]);
+                return data;
+              }
+            } catch (e) {
+              console.error('Error parsing TikTok data:', e);
+            }
+          }
+        }
+        
+        // Fallback: try to extract from other script tags
+        for (let script of scripts) {
+          if (script.textContent && script.textContent.includes('__DEFAULT_SCOPE__')) {
+            try {
+              const match = script.textContent.match(/{"__DEFAULT_SCOPE__":.+/);
+              if (match) {
+                const data = JSON.parse(match[0]);
+                return data;
+              }
+            } catch (e) {
+              console.error('Error parsing fallback TikTok data:', e);
+            }
+          }
+        }
+        
+        return null;
+      });
+      
+      await page.close();
+      
+      if (!videoData) {
+        throw new Error('Failed to extract video data from TikTok page');
+      }
+      
+      // Parse the extracted data
+      const video = this.parseVideoData(videoData, videoId);
+      console.log(`✅ Successfully extracted video: ${video.id}`);
+      
+      return video;
+      
+    } catch (error) {
+      console.error(`❌ Error extracting video from ${url}:`, error);
+      throw error;
+    }
+  }
+  
+  private extractVideoIdFromUrl(url: string): string | null {
+    // Handle different TikTok URL formats
+    const patterns = [
+      /\/video\/(\d+)/,
+      /\/v\/(\d+)/,
+      /\/t\/(\w+)/,
+      /vm\.tiktok\.com\/(\w+)/,
+      /tiktok\.com\/@[^/]+\/video\/(\d+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+    
+    return null;
+  }
+  
+  private parseVideoData(data: any, videoId: string): TikTokVideo {
+    try {
+      // Navigate the complex TikTok data structure
+      const videoDetail = data?.__DEFAULT_SCOPE__?.["webapp.video-detail"]?.itemInfo?.itemStruct;
+      
+      if (!videoDetail) {
+        throw new Error('Video data not found in expected structure');
+      }
+      
+      return {
+        id: videoDetail.id || videoId,
+        videoUrl: videoDetail.video?.downloadAddr || videoDetail.video?.playAddr || '',
+        webmUrl: videoDetail.video?.playAddr || '',
+        thumbnail: videoDetail.video?.cover || videoDetail.video?.dynamicCover || '',
+        caption: videoDetail.desc || '',
+        user: {
+          id: videoDetail.author?.id || '',
+          username: videoDetail.author?.uniqueId || '',
+          displayName: videoDetail.author?.nickname || '',
+          avatar: videoDetail.author?.avatarLarger || videoDetail.author?.avatarMedium || '',
+          isVerified: videoDetail.author?.verified || false
+        },
+        music: {
+          title: videoDetail.music?.title || '',
+          artist: videoDetail.music?.authorName || ''
+        },
+        stats: {
+          likes: videoDetail.stats?.diggCount || 0,
+          comments: videoDetail.stats?.commentCount || 0,
+          shares: videoDetail.stats?.shareCount || 0,
+          views: videoDetail.stats?.playCount || 0
+        },
+        createdTime: videoDetail.createTime || Date.now()
+      };
+    } catch (error) {
+      console.error('Error parsing video data:', error);
+      // Return a basic structure with available data
+      return {
+        id: videoId,
+        videoUrl: '',
+        thumbnail: '',
+        caption: '',
+        user: {
+          id: '',
+          username: '',
+          displayName: '',
+          avatar: '',
+          isVerified: false
+        },
+        music: {
+          title: '',
+          artist: ''
+        },
+        stats: {
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          views: 0
+        },
+        createdTime: Date.now()
+      };
+    }
+  }
+
   public async close() {
     if (this.browser) {
       await this.browser.close();

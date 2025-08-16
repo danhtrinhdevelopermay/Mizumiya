@@ -50,7 +50,13 @@ import {
   userDailyVotes,
   type BeautyContestant,
   type BeautyVote,
-  type UserDailyVotes
+  type UserDailyVotes,
+  tiktokAccounts,
+  tiktokImports,
+  type TiktokAccount,
+  type InsertTiktokAccount,
+  type TiktokImport,
+  type InsertTiktokImport
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, or, sql, ne, lt, inArray } from "drizzle-orm";
@@ -134,6 +140,17 @@ export interface IStorage {
   getAllContestantVotes(): Promise<Array<{ contestant: BeautyContestant; votes: Array<{ user: User; voteDate: string }> }>>;
   createContestant(data: { name: string; country: string; avatar: string }): Promise<BeautyContestant>;
   deleteContestant(contestantId: string): Promise<boolean>;
+
+  // TikTok Import
+  createTiktokAccount(account: InsertTiktokAccount): Promise<TiktokAccount>;
+  updateTiktokAccount(id: string, updates: Partial<InsertTiktokAccount>): Promise<TiktokAccount | undefined>;
+  getTiktokAccountByUsername(tiktokUsername: string): Promise<TiktokAccount | undefined>;
+  getTiktokAccountById(id: string): Promise<TiktokAccount | undefined>;
+  linkTiktokAccountToUser(tiktokAccountId: string, appUserId: string): Promise<TiktokAccount | undefined>;
+  createTiktokImport(importData: InsertTiktokImport): Promise<TiktokImport>;
+  updateTiktokImport(id: string, updates: Partial<InsertTiktokImport>): Promise<TiktokImport | undefined>;
+  getTiktokImportByVideoId(tiktokVideoId: string): Promise<TiktokImport | undefined>;
+  getTiktokImports(limit?: number): Promise<Array<TiktokImport & { account: TiktokAccount }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2030,6 +2047,116 @@ export class DatabaseStorage implements IStorage {
   // === END Beauty Contest Admin methods ===
 
   // === END Beauty Contest methods ===
+
+  // === TikTok Import methods ===
+  async createTiktokAccount(account: InsertTiktokAccount): Promise<TiktokAccount> {
+    const [newAccount] = await db
+      .insert(tiktokAccounts)
+      .values(account)
+      .returning();
+    return newAccount;
+  }
+
+  async updateTiktokAccount(id: string, updates: Partial<InsertTiktokAccount>): Promise<TiktokAccount | undefined> {
+    const [updatedAccount] = await db
+      .update(tiktokAccounts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(tiktokAccounts.id, id))
+      .returning();
+    return updatedAccount;
+  }
+
+  async getTiktokAccountByUsername(tiktokUsername: string): Promise<TiktokAccount | undefined> {
+    const [account] = await db
+      .select()
+      .from(tiktokAccounts)
+      .where(eq(tiktokAccounts.tiktokUsername, tiktokUsername))
+      .limit(1);
+    return account;
+  }
+
+  async getTiktokAccountById(id: string): Promise<TiktokAccount | undefined> {
+    const [account] = await db
+      .select()
+      .from(tiktokAccounts)
+      .where(eq(tiktokAccounts.id, id))
+      .limit(1);
+    return account;
+  }
+
+  async linkTiktokAccountToUser(tiktokAccountId: string, appUserId: string): Promise<TiktokAccount | undefined> {
+    const [updatedAccount] = await db
+      .update(tiktokAccounts)
+      .set({ appUserId, updatedAt: new Date() })
+      .where(eq(tiktokAccounts.id, tiktokAccountId))
+      .returning();
+    return updatedAccount;
+  }
+
+  async createTiktokImport(importData: InsertTiktokImport): Promise<TiktokImport> {
+    const [newImport] = await db
+      .insert(tiktokImports)
+      .values(importData)
+      .returning();
+    return newImport;
+  }
+
+  async updateTiktokImport(id: string, updates: Partial<InsertTiktokImport>): Promise<TiktokImport | undefined> {
+    const [updatedImport] = await db
+      .update(tiktokImports)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(tiktokImports.id, id))
+      .returning();
+    return updatedImport;
+  }
+
+  async getTiktokImportByVideoId(tiktokVideoId: string): Promise<TiktokImport | undefined> {
+    const [importRecord] = await db
+      .select()
+      .from(tiktokImports)
+      .where(eq(tiktokImports.tiktokVideoId, tiktokVideoId))
+      .limit(1);
+    return importRecord;
+  }
+
+  async getTiktokImports(limit: number = 50): Promise<Array<TiktokImport & { account: TiktokAccount }>> {
+    const imports = await db
+      .select({
+        id: tiktokImports.id,
+        tiktokAccountId: tiktokImports.tiktokAccountId,
+        tiktokVideoId: tiktokImports.tiktokVideoId,
+        originalUrl: tiktokImports.originalUrl,
+        postId: tiktokImports.postId,
+        status: tiktokImports.status,
+        errorMessage: tiktokImports.errorMessage,
+        createdAt: tiktokImports.createdAt,
+        updatedAt: tiktokImports.updatedAt,
+        account: {
+          id: tiktokAccounts.id,
+          tiktokUsername: tiktokAccounts.tiktokUsername,
+          tiktokUserId: tiktokAccounts.tiktokUserId,
+          displayName: tiktokAccounts.displayName,
+          avatar: tiktokAccounts.avatar,
+          followerCount: tiktokAccounts.followerCount,
+          followingCount: tiktokAccounts.followingCount,
+          likesCount: tiktokAccounts.likesCount,
+          videoCount: tiktokAccounts.videoCount,
+          verified: tiktokAccounts.verified,
+          signature: tiktokAccounts.signature,
+          appUserId: tiktokAccounts.appUserId,
+          createdAt: tiktokAccounts.createdAt,
+          updatedAt: tiktokAccounts.updatedAt
+        }
+      })
+      .from(tiktokImports)
+      .innerJoin(tiktokAccounts, eq(tiktokImports.tiktokAccountId, tiktokAccounts.id))
+      .orderBy(desc(tiktokImports.createdAt))
+      .limit(limit);
+
+    return imports;
+  }
+
+  // === END TikTok Import methods ===
 
   // === END Admin methods ===
 }
