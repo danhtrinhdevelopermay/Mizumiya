@@ -107,7 +107,17 @@ export class TikTokImportService {
       if (!appUser) {
         console.log(`🆕 Creating app user account for @${videoData.user.username}`);
         appUser = await this.createAppUser(videoData, tiktokAccount.id);
+        
+        if (!appUser) {
+          throw new Error('Failed to create app user account');
+        }
+        
         await storage.linkTiktokAccountToUser(tiktokAccount.id, appUser.id);
+      }
+
+      // Ensure appUser exists before proceeding
+      if (!appUser || !appUser.id) {
+        throw new Error('User account not available for post creation');
       }
 
       // Step 7: Create post
