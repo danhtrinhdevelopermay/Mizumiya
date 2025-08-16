@@ -44,9 +44,16 @@ export class TikTokImportService {
       console.log('📡 Extracting video data from TikTok...');
       const videoData = await this.scraper.extractVideoFromUrl(url);
       
-      if (!videoData.user.username) {
+      // Validate extracted video data
+      if (!videoData || !videoData.user || !videoData.user.username) {
         throw new Error('Could not extract TikTok user information');
       }
+      
+      if (!videoData.id) {
+        throw new Error('Could not extract TikTok video ID');
+      }
+      
+      console.log(`📹 Extracted video data for @${videoData.user.username} - ID: ${videoData.id}`);
 
       // Step 2: Check if we already imported this video
       const existingImport = await storage.getTiktokImportByVideoId(videoData.id);
@@ -65,24 +72,39 @@ export class TikTokImportService {
       if (!tiktokAccount) {
         console.log(`👤 Creating new TikTok account for @${videoData.user.username}`);
         tiktokAccount = await this.createTikTokAccount(videoData);
+        
+        if (!tiktokAccount || !tiktokAccount.id) {
+          throw new Error('Failed to create TikTok account');
+        }
+        
         accountCreated = true;
       } else {
         console.log(`👤 Using existing TikTok account for @${videoData.user.username}`);
         // Update account data with latest info
-        await storage.updateTiktokAccount(tiktokAccount.id, {
-          displayName: videoData.user.displayName,
-          avatar: videoData.user.avatar,
-          verified: videoData.user.isVerified
-        });
+        if (tiktokAccount.id) {
+          await storage.updateTiktokAccount(tiktokAccount.id, {
+            displayName: videoData.user.displayName || '',
+            avatar: videoData.user.avatar || '',
+            verified: videoData.user.isVerified || false
+          });
+        }
       }
 
       // Step 4: Create import record
+      if (!tiktokAccount || !tiktokAccount.id) {
+        throw new Error('TikTok account not available for import record creation');
+      }
+      
       const importRecord = await storage.createTiktokImport({
         tiktokAccountId: tiktokAccount.id,
         tiktokVideoId: videoData.id,
         originalUrl: url,
         status: 'processing'
       });
+      
+      if (!importRecord || !importRecord.id) {
+        throw new Error('Failed to create import record');
+      }
 
       // Step 5: Download and upload video
       console.log('⬇️ Downloading and uploading video...');
@@ -101,24 +123,31 @@ export class TikTokImportService {
       // Step 6: Create user account if needed
       let appUser = null;
       if (tiktokAccount.appUserId) {
-        appUser = await storage.getUserById(tiktokAccount.appUserId);
+        try {
+          appUser = await storage.getUserById(tiktokAccount.appUserId);
+        } catch (error) {
+          console.log(`⚠️ Could not find existing user, will create new one`);
+          appUser = null;
+        }
       }
       
       if (!appUser) {
         console.log(`🆕 Creating app user account for @${videoData.user.username}`);
         appUser = await this.createAppUser(videoData, tiktokAccount.id);
         
-        if (!appUser) {
+        if (!appUser || !appUser.id) {
           throw new Error('Failed to create app user account');
         }
         
         await storage.linkTiktokAccountToUser(tiktokAccount.id, appUser.id);
       }
 
-      // Ensure appUser exists before proceeding
+      // Final validation of appUser
       if (!appUser || !appUser.id) {
         throw new Error('User account not available for post creation');
       }
+      
+      console.log(`✅ User account ready: ${appUser.username} (${appUser.id})`);
 
       // Step 7: Create post
       console.log('📝 Creating post...');
@@ -172,12 +201,16 @@ export class TikTokImportService {
   }
 
   private async createTikTokAccount(videoData: TikTokVideo) {
+    if (!videoData || !videoData.user || !videoData.user.username) {
+      throw new Error('Invalid video data for TikTok account creation');
+    }
+    
     return await storage.createTiktokAccount({
       tiktokUsername: videoData.user.username,
-      tiktokUserId: videoData.user.id,
-      displayName: videoData.user.displayName,
-      avatar: videoData.user.avatar,
-      verified: videoData.user.isVerified,
+      tiktokUserId: videoData.user.id || '',
+      displayName: videoData.user.displayName || videoData.user.username,
+      avatar: videoData.user.avatar || '',
+      verified: videoData.user.isVerified || false,
       signature: '', // TikTok bio not available from video data
       followerCount: 0,
       followingCount: 0,
@@ -187,6 +220,10 @@ export class TikTokImportService {
   }
 
   private async createAppUser(videoData: TikTokVideo, tiktokAccountId: string) {
+    if (!videoData || !videoData.user || !videoData.user.username) {
+      throw new Error('Invalid video data for app user creation');
+    }
+    
     // Generate unique username and email
     const baseUsername = videoData.user.username || `tiktok_${crypto.randomBytes(4).toString('hex')}`;
     let username = baseUsername;
@@ -202,52 +239,85 @@ export class TikTokImportService {
     const password = crypto.randomBytes(16).toString('hex'); // Random password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    return await storage.createUser({
-      username,
-      email,
-      password: hashedPassword,
-      firstName: videoData.user.displayName || videoData.user.username,
-      lastName: '',
-      dateOfBirth: null,
-      profileImage: videoData.user.avatar,
-      bio: `TikTok creator @${videoData.user.username}`
-    });
+    try {
+      const user = await storage.createUser({
+        username,
+        email,
+        password: hashedPassword,
+        firstName: videoData.user.displayName || videoData.user.username || 'TikTok User',
+        lastName: '',
+        dateOfBirth: null,
+        profileImage: videoData.user.avatar || undefined,
+        bio: `TikTok creator @${videoData.user.username}`
+      });
+      
+      if (!user || !user.id) {
+        throw new Error('Failed to create user - no user data returned');
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('Error creating app user:', error);
+      throw new Error(`Failed to create app user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private async downloadAndUploadVideo(videoData: TikTokVideo): Promise<string> {
-    if (!videoData.videoUrl) {
+    if (!videoData || !videoData.videoUrl) {
       throw new Error('No video URL available');
+    }
+    
+    if (!videoData.user || !videoData.user.username) {
+      throw new Error('No user information available for video filename');
+    }
+    
+    if (!videoData.id) {
+      throw new Error('No video ID available');
     }
 
     console.log('⬇️ Downloading video from TikTok...');
     
-    // Download video
-    const response = await fetch(videoData.videoUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Referer': 'https://www.tiktok.com/'
+    try {
+      // Download video
+      const response = await fetch(videoData.videoUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Referer': 'https://www.tiktok.com/'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to download video: ${response.status} ${response.statusText}`);
       }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to download video: ${response.status} ${response.statusText}`);
+      
+      const videoBuffer = Buffer.from(await response.arrayBuffer());
+      
+      if (!videoBuffer || videoBuffer.length === 0) {
+        throw new Error('Downloaded video is empty');
+      }
+      
+      console.log(`📦 Downloaded video: ${videoBuffer.length} bytes`);
+      
+      // Upload to Cloudinary
+      console.log('☁️ Uploading to Cloudinary...');
+      const filename = `tiktok_${videoData.user.username}_${videoData.id}`;
+      const uploadResult = await CloudinaryService.uploadPostMedia(
+        videoBuffer,
+        'tiktok-import',
+        `tiktok_${videoData.id}`,
+        'video'
+      );
+      
+      if (!uploadResult || !uploadResult.secure_url) {
+        throw new Error('Failed to upload video to Cloudinary - no URL returned');
+      }
+      
+      console.log(`✅ Video uploaded: ${uploadResult.secure_url}`);
+      return uploadResult.secure_url;
+    } catch (error) {
+      console.error('Error in video download/upload:', error);
+      throw new Error(`Video processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    const videoBuffer = Buffer.from(await response.arrayBuffer());
-    console.log(`📦 Downloaded video: ${videoBuffer.length} bytes`);
-    
-    // Upload to Cloudinary
-    console.log('☁️ Uploading to Cloudinary...');
-    const filename = `tiktok_${videoData.user.username}_${videoData.id}`;
-    const uploadResult = await CloudinaryService.uploadPostMedia(
-      videoBuffer,
-      'tiktok-import',
-      `tiktok_${videoData.id}`,
-      'video'
-    );
-    
-    console.log(`✅ Video uploaded: ${uploadResult.secure_url}`);
-    return uploadResult.secure_url;
   }
 
   private generateVideoTitle(videoData: TikTokVideo): string {

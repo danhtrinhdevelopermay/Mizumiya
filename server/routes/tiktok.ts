@@ -159,15 +159,29 @@ router.post('/admin/import', requireAuth, async (req, res) => {
       });
     }
     
+    // Validate URL format
+    const urlPattern = /(tiktok\.com|vm\.tiktok\.com)/i;
+    if (!urlPattern.test(url)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid TikTok URL format'
+      });
+    }
+    
     console.log(`🎬 Admin importing TikTok video: ${url}`);
+    console.log(`👤 Request from user: ${req.session?.user?.username || 'unknown'}`);
     
     const result = await tiktokImportService.importVideoFromUrl(url);
+    
+    console.log(`✅ Import result:`, result.success ? 'SUCCESS' : 'FAILED');
     
     res.json(result);
     
   } catch (error) {
     console.error('❌ TikTok import error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
     res.status(500).json({
       success: false,
