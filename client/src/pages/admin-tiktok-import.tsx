@@ -76,12 +76,30 @@ export default function AdminTikTokImport() {
   // Import video mutation
   const importMutation = useMutation({
     mutationFn: async (url: string): Promise<TikTokImportResult> => {
+      console.log("🎬 Starting TikTok import for URL:", url);
+      
       const response = await fetch("/api/tiktok/admin/import", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "credentials": "include"
+        },
+        credentials: "include",
         body: JSON.stringify({ url }),
       });
-      return await response.json() as TikTokImportResult;
+      
+      console.log("📡 Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Request failed:", errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText || 'Unknown error'}`);
+      }
+      
+      const result = await response.json() as TikTokImportResult;
+      console.log("✅ Import result:", result);
+      
+      return result;
     },
     onSuccess: (data: TikTokImportResult) => {
       setImportResult(data);
@@ -101,12 +119,17 @@ export default function AdminTikTokImport() {
       }
     },
     onError: (error: any) => {
-      const errorMessage = error?.message || "Import thất bại";
+      console.error("🚨 Import mutation error:", error);
+      console.error("Error stack:", error?.stack);
+      
+      const errorMessage = error?.message || "Import thất bại - lỗi không xác định";
+      
       toast({
-        title: "❌ Lỗi",
+        title: "❌ Lỗi Import",
         description: errorMessage,
         variant: "destructive",
       });
+      
       setImportResult({
         success: false,
         message: errorMessage,
